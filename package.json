@@ -1,10 +1,17 @@
 {
-  "name": "qbittorrent-desktop",
+  "name": "@georgeal78/qbittorrent-desktop",
   "version": "1.0.0",
   "description": "qBittorrent Desktop Client for Windows 11",
   "main": "main.js",
   "author": "qBittorrent Desktop",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/GeorgeAL78/qbittorrent-desktop.git"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
   "scripts": {
     "start": "electron .",
     "build": "electron-builder --win --x64",
