@@ -204,6 +204,13 @@
   <div class="section">
     <div class="section-title">Behaviour</div>
     <div class="toggle-row">
+      <span class="toggle-label">Run at Windows startup (minimized to tray)</span>
+      <label class="toggle">
+        <input type="checkbox" id="runAtStartup" />
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div class="toggle-row" style="margin-top:12px">
       <span class="toggle-label">Start minimized to tray</span>
       <label class="toggle">
         <input type="checkbox" id="startMinimized" />
@@ -256,6 +263,7 @@
       document.getElementById('qbUrl').value = cfg.qbUrl || '';
       document.getElementById('username').value = cfg.username || '';
       document.getElementById('password').value = cfg.password || '';
+      document.getElementById('runAtStartup').checked = !!cfg.runAtStartup;
       document.getElementById('startMinimized').checked = !!cfg.startMinimized;
       document.getElementById('minimizeToTray').checked = cfg.minimizeToTray !== false;
       document.getElementById('clipboardMonitor').checked = cfg.clipboardMonitor !== false;
@@ -274,6 +282,7 @@
         qbUrl: url,
         username: document.getElementById('username').value.trim(),
         password: document.getElementById('password').value,
+        runAtStartup: document.getElementById('runAtStartup').checked,
         startMinimized: document.getElementById('startMinimized').checked,
         minimizeToTray: document.getElementById('minimizeToTray').checked,
         clipboardMonitor: document.getElementById('clipboardMonitor').checked,

@@ -27,6 +27,7 @@ function loadConfig() {
     password: '',
     startMinimized: false,
     minimizeToTray: true,
+    runAtStartup: false,
     clipboardMonitor: true,
     remoteDownloadPath: '/downloads',
     localDownloadPath: 'Z:\\qbittorrent',
@@ -219,7 +220,7 @@ function createMainWindow() {
       webSecurity: false,
       allowRunningInsecureContent: true,
     },
-    show: !config.startMinimized,
+    show: !config.startMinimized && !process.argv.includes('--hidden'),
     autoHideMenuBar: true,
   });
 
@@ -563,6 +564,10 @@ ipcMain.handle('save-config', (event, newConfig) => {
   const urlChanged = newConfig.qbUrl !== config.qbUrl;
   config = { ...config, ...newConfig };
   saveConfig(config);
+  app.setLoginItemSettings({
+    openAtLogin: !!config.runAtStartup,
+    args: config.runAtStartup ? ['--hidden'] : [],
+  });
   updateTrayMenu();
   if (urlChanged) loadQbittorrent();
   return { ok: true };
