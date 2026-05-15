@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #16213e;
+      color: #e0e0e0;
+      height: 150px;
+      display: flex;
+      flex-direction: column;
+      padding: 14px 16px 12px;
+      border: 1px solid #0f3460;
+      border-radius: 10px;
+      user-select: none;
+      overflow: hidden;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      flex-shrink: 0;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #4fc3f7;
+      flex-shrink: 0;
+      animation: pulse 1.8s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #4fc3f7;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .timer {
+      margin-left: auto;
+      font-size: 11px;
+      color: #555;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .name {
+      font-size: 13px;
+      color: #ccc;
+      line-height: 1.35;
+      flex: 1;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      word-break: break-word;
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+      flex-shrink: 0;
+    }
+
+    button {
+      flex: 1;
+      padding: 7px 0;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+
+    button:active { transform: scale(0.96); }
+
+    .btn-add {
+      background: #4fc3f7;
+      color: #0d1b2a;
+    }
+
+    .btn-add:hover { opacity: 0.88; }
+
+    .btn-dismiss {
+      background: #1e2d4a;
+      color: #888;
+    }
+
+    .btn-dismiss:hover { background: #253659; color: #aaa; }
+
+    .progress-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      height: 2px;
+      background: #4fc3f7;
+      width: 100%;
+      transform-origin: left;
+      animation: shrink 12s linear forwards;
+    }
+
+    @keyframes shrink {
+      from { transform: scaleX(1); }
+      to { transform: scaleX(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="dot"></div>
+    <span class="title">Magnet Detected</span>
+    <span class="timer" id="timer">12s</span>
+  </div>
+  <div class="name" id="name">Loading…</div>
+  <div class="actions">
+    <button class="btn-add" id="btnAdd">Add to qBittorrent</button>
+    <button class="btn-dismiss" id="btnDismiss">Dismiss</button>
+  </div>
+  <div class="progress-bar"></div>
+
+  <script>
+    const api = window.popupApi;
+    let seconds = 12;
+
+    async function init() {
+      const { name } = await api.getMagnet();
+      document.getElementById('name').textContent = name || 'Unknown Torrent';
+    }
+
+    // Countdown timer
+    const timerEl = document.getElementById('timer');
+    const tick = setInterval(() => {
+      seconds--;
+      timerEl.textContent = seconds + 's';
+      if (seconds <= 0) clearInterval(tick);
+    }, 1000);
+
+    // Update if a second magnet is detected while popup is open
+    api.onUpdate((url, name) => {
+      document.getElementById('name').textContent = name || 'Unknown Torrent';
+      // Restart countdown
+      seconds = 12;
+      timerEl.textContent = '12s';
+    });
+
+    document.getElementById('btnAdd').addEventListener('click', () => {
+      document.getElementById('btnAdd').textContent = 'Opening…';
+      document.getElementById('btnAdd').disabled = true;
+      api.openDialog();
+    });
+
+    document.getElementById('btnDismiss').addEventListener('click', () => api.dismiss());
+
+    init();
+  </script>
+</body>
+</html>

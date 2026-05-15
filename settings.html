@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings — qBittorrent Desktop</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #1a1a2e;
+      color: #e0e0e0;
+      padding: 28px 32px;
+      user-select: none;
+    }
+
+    h1 {
+      font-size: 18px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    h1 svg { flex-shrink: 0; }
+
+    .section {
+      background: #16213e;
+      border: 1px solid #0f3460;
+      border-radius: 10px;
+      padding: 18px 20px;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #4fc3f7;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 14px;
+    }
+
+    .field {
+      margin-bottom: 14px;
+    }
+
+    .field:last-child { margin-bottom: 0; }
+
+    label {
+      display: block;
+      font-size: 13px;
+      color: #aaa;
+      margin-bottom: 5px;
+    }
+
+    input[type="text"],
+    input[type="password"],
+    input[type="url"] {
+      width: 100%;
+      padding: 8px 12px;
+      background: #0d1b2a;
+      border: 1px solid #0f3460;
+      border-radius: 6px;
+      color: #e0e0e0;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input[type="text"]:focus,
+    input[type="password"]:focus,
+    input[type="url"]:focus {
+      border-color: #4fc3f7;
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 0;
+    }
+
+    .toggle-label {
+      font-size: 13px;
+      color: #ccc;
+    }
+
+    .toggle {
+      position: relative;
+      width: 40px;
+      height: 22px;
+      flex-shrink: 0;
+    }
+
+    .toggle input { opacity: 0; width: 0; height: 0; }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background: #0f3460;
+      border-radius: 22px;
+      transition: 0.25s;
+    }
+
+    .slider:before {
+      content: '';
+      position: absolute;
+      height: 16px;
+      width: 16px;
+      left: 3px;
+      bottom: 3px;
+      background: #888;
+      border-radius: 50%;
+      transition: 0.25s;
+    }
+
+    .toggle input:checked + .slider { background: #0f3460; }
+    .toggle input:checked + .slider:before {
+      transform: translateX(18px);
+      background: #4fc3f7;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 20px;
+    }
+
+    button {
+      padding: 9px 22px;
+      border-radius: 7px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+
+    button:active { transform: scale(0.97); }
+
+    .btn-primary {
+      background: #4fc3f7;
+      color: #0d1b2a;
+    }
+
+    .btn-primary:hover { opacity: 0.9; }
+
+    .btn-secondary {
+      background: #0f3460;
+      color: #ccc;
+    }
+
+    .btn-secondary:hover { opacity: 0.8; }
+
+    .status {
+      font-size: 13px;
+      color: #4fc3f7;
+      text-align: right;
+      margin-top: 8px;
+      min-height: 18px;
+    }
+
+    .status.error { color: #ef5350; }
+
+    .hint {
+      font-size: 11px;
+      color: #666;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+  <h1>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4fc3f7" stroke-width="2">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
+    </svg>
+    Settings
+  </h1>
+
+  <div class="section">
+    <div class="section-title">Connection</div>
+    <div class="field">
+      <label for="qbUrl">qBittorrent Web UI URL</label>
+      <input type="url" id="qbUrl" placeholder="http://192.168.1.169:8888" />
+      <div class="hint">Include protocol and port, e.g. http://192.168.1.169:8888</div>
+    </div>
+    <div class="field">
+      <label for="username">Username (optional)</label>
+      <input type="text" id="username" placeholder="admin" autocomplete="off" />
+    </div>
+    <div class="field">
+      <label for="password">Password (optional)</label>
+      <input type="password" id="password" placeholder="Leave blank if no auth" autocomplete="off" />
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Behaviour</div>
+    <div class="toggle-row">
+      <span class="toggle-label">Start minimized to tray</span>
+      <label class="toggle">
+        <input type="checkbox" id="startMinimized" />
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div class="toggle-row" style="margin-top:12px">
+      <span class="toggle-label">Minimize to tray on close</span>
+      <label class="toggle">
+        <input type="checkbox" id="minimizeToTray" />
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div class="toggle-row" style="margin-top:12px">
+      <span class="toggle-label">Monitor clipboard for magnet links</span>
+      <label class="toggle">
+        <input type="checkbox" id="clipboardMonitor" />
+        <span class="slider"></span>
+      </label>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Path Mapping (double-click to open)</div>
+    <div class="field">
+      <label for="remoteDownloadPath">Remote download path (on qBittorrent server)</label>
+      <input type="text" id="remoteDownloadPath" placeholder="/downloads" />
+      <div class="hint">The save path as qBittorrent sees it, e.g. /downloads</div>
+    </div>
+    <div class="field">
+      <label for="localDownloadPath">Local path (on this PC)</label>
+      <input type="text" id="localDownloadPath" placeholder="Z:\qbittorrent" />
+      <div class="hint">Where that folder is mounted on your PC, e.g. Z:\qbittorrent</div>
+    </div>
+  </div>
+
+  <div class="status" id="status"></div>
+
+  <div class="actions">
+    <button class="btn-secondary" id="btnCancel">Cancel</button>
+    <button class="btn-primary" id="btnSave">Save &amp; Apply</button>
+  </div>
+
+  <script>
+    const api = window.qbDesktop;
+    let cfg = {};
+
+    async function init() {
+      cfg = await api.getConfig();
+      document.getElementById('qbUrl').value = cfg.qbUrl || '';
+      document.getElementById('username').value = cfg.username || '';
+      document.getElementById('password').value = cfg.password || '';
+      document.getElementById('startMinimized').checked = !!cfg.startMinimized;
+      document.getElementById('minimizeToTray').checked = cfg.minimizeToTray !== false;
+      document.getElementById('clipboardMonitor').checked = cfg.clipboardMonitor !== false;
+      document.getElementById('remoteDownloadPath').value = cfg.remoteDownloadPath || '/downloads';
+      document.getElementById('localDownloadPath').value = cfg.localDownloadPath || 'Z:\\qbittorrent';
+    }
+
+    document.getElementById('btnSave').addEventListener('click', async () => {
+      const url = document.getElementById('qbUrl').value.trim().replace(/\/$/, '');
+      if (!url) {
+        showStatus('URL is required.', true);
+        return;
+      }
+      const newCfg = {
+        ...cfg,
+        qbUrl: url,
+        username: document.getElementById('username').value.trim(),
+        password: document.getElementById('password').value,
+        startMinimized: document.getElementById('startMinimized').checked,
+        minimizeToTray: document.getElementById('minimizeToTray').checked,
+        clipboardMonitor: document.getElementById('clipboardMonitor').checked,
+        remoteDownloadPath: document.getElementById('remoteDownloadPath').value.trim() || '/downloads',
+        localDownloadPath: document.getElementById('localDownloadPath').value.trim() || 'Z:\\qbittorrent',
+      };
+      await api.saveConfig(newCfg);
+      showStatus('Settings saved!', false);
+      setTimeout(() => window.close(), 800);
+    });
+
+    document.getElementById('btnCancel').addEventListener('click', () => window.close());
+
+    function showStatus(msg, isError) {
+      const el = document.getElementById('status');
+      el.textContent = msg;
+      el.className = 'status' + (isError ? ' error' : '');
+    }
+
+    init();
+  </script>
+</body>
+</html>

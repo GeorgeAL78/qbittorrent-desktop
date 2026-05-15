@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Connection Error — qBittorrent Desktop</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #1a1a2e;
+      color: #e0e0e0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .card {
+      background: #16213e;
+      border: 1px solid #0f3460;
+      border-radius: 14px;
+      padding: 40px 48px;
+      max-width: 520px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 24px;
+      background: #0f3460;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 12px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: #888;
+      margin-bottom: 28px;
+      line-height: 1.6;
+    }
+
+    .url-box {
+      background: #0d1b2a;
+      border: 1px solid #0f3460;
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-family: 'Consolas', monospace;
+      font-size: 13px;
+      color: #4fc3f7;
+      margin-bottom: 28px;
+      word-break: break-all;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: 10px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+
+    button:active { transform: scale(0.97); }
+
+    .btn-primary {
+      background: #4fc3f7;
+      color: #0d1b2a;
+    }
+
+    .btn-secondary {
+      background: #0f3460;
+      color: #ccc;
+    }
+
+    .btn-primary:hover, .btn-secondary:hover { opacity: 0.85; }
+
+    .tips {
+      margin-top: 28px;
+      text-align: left;
+      background: #0d1b2a;
+      border-radius: 8px;
+      padding: 14px 18px;
+    }
+
+    .tips-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #4fc3f7;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 10px;
+    }
+
+    .tips ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .tips li {
+      font-size: 13px;
+      color: #999;
+      padding: 3px 0;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .tips li::before {
+      content: '›';
+      color: #4fc3f7;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ef5350" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+    </div>
+
+    <h1>Can't connect to qBittorrent</h1>
+    <p class="subtitle">qBittorrent Desktop couldn't reach the Web UI. Make sure qBittorrent is running and the Web UI is enabled.</p>
+
+    <div class="url-box" id="urlDisplay">—</div>
+
+    <div class="actions">
+      <button class="btn-primary" id="btnRetry">Retry Connection</button>
+      <button class="btn-secondary" id="btnSettings">Open Settings</button>
+    </div>
+
+    <div class="tips">
+      <div class="tips-title">Checklist</div>
+      <ul>
+        <li>qBittorrent is running on the remote machine / Docker container</li>
+        <li>Web UI is enabled in qBittorrent → Tools → Options → Web UI</li>
+        <li>The host and port match what's configured in Settings</li>
+        <li>Your PC can reach the remote IP (try ping)</li>
+        <li>No firewall is blocking the port</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const url = params.get('url') || '';
+    document.getElementById('urlDisplay').textContent = url || '(no URL configured)';
+
+    document.getElementById('btnRetry').addEventListener('click', () => {
+      window.qbDesktop?.reload();
+    });
+
+    document.getElementById('btnSettings').addEventListener('click', () => {
+      window.qbDesktop?.openSettings();
+    });
+  </script>
+</body>
+</html>

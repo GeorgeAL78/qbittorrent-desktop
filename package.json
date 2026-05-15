@@ -1,0 +1,55 @@
+{
+  "name": "qbittorrent-desktop",
+  "version": "1.0.0",
+  "description": "qBittorrent Desktop Client for Windows 11",
+  "main": "main.js",
+  "author": "qBittorrent Desktop",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win --x64",
+    "build:portable": "electron-builder --win portable --x64"
+  },
+  "dependencies": {
+    "electron-store": "^10.0.0"
+  },
+  "devDependencies": {
+    "electron": "^36.0.0",
+    "electron-builder": "^26.0.0"
+  },
+  "build": {
+    "appId": "com.qbittorrent.desktop",
+    "productName": "qBittorrent Desktop",
+    "win": {
+      "target": [
+        { "target": "nsis", "arch": ["x64"] },
+        { "target": "portable", "arch": ["x64"] }
+      ],
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "qBittorrent Desktop"
+    },
+    "files": [
+      "**/*",
+      "!node_modules/.cache",
+      "!**/*.map"
+    ],
+    "extraResources": [
+      { "from": "assets/", "to": "assets/", "filter": ["**/*"] }
+    ],
+    "fileAssociations": [
+      {
+        "ext": "torrent",
+        "name": "Torrent File",
+        "description": "BitTorrent Torrent File",
+        "role": "Default",
+        "icon": "assets/icon.ico"
+      }
+    ]
+  }
+}
