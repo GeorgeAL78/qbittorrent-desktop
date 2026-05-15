@@ -4,3 +4,4 @@ dist/
 *.log
 make_icon.py
 assets/icon.png
+.npmrc
