@@ -7,6 +7,7 @@ const fs = require('fs');
 const http = require('http');
 const https = require('https');
 
+app.setAppUserModelId('qBittorrent Desktop');
 app.commandLine.appendSwitch('ignore-certificate-errors');
 
 // ── Single-instance lock (required for second-instance + file-association) ──
