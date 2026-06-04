@@ -61,7 +61,7 @@ npm run build
 
 ## Changelog
 
-### v1.0.7
+### v1.0.8 *(latest)*
 - Added screenshots to README (main window, settings, tray menu)
 
 ### v1.0.5
