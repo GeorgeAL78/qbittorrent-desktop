@@ -265,6 +265,7 @@
       document.getElementById('password').value = cfg.password || '';
       document.getElementById('runAtStartup').checked = !!cfg.runAtStartup;
       document.getElementById('startMinimized').checked = !!cfg.startMinimized;
+      toggleStartMinimized();
       document.getElementById('minimizeToTray').checked = cfg.minimizeToTray !== false;
       document.getElementById('clipboardMonitor').checked = cfg.clipboardMonitor !== false;
       document.getElementById('remoteDownloadPath').value = cfg.remoteDownloadPath || '/downloads';
@@ -295,6 +296,15 @@
     });
 
     document.getElementById('btnCancel').addEventListener('click', () => window.close());
+
+    function toggleStartMinimized() {
+      const runAtStartup = document.getElementById('runAtStartup').checked;
+      const row = document.getElementById('startMinimized').closest('.toggle-row');
+      row.style.opacity = runAtStartup ? '0.4' : '1';
+      row.style.pointerEvents = runAtStartup ? 'none' : '';
+      if (runAtStartup) document.getElementById('startMinimized').checked = false;
+    }
+    document.getElementById('runAtStartup').addEventListener('change', toggleStartMinimized);
 
     function showStatus(msg, isError) {
       const el = document.getElementById('status');

@@ -45,11 +45,13 @@ let config = loadConfig();
 let qbtCookie = null;
 
 function qbtBaseUrl() {
+  if (!config.qbUrl) return null;
   return new URL(config.qbUrl.replace(/\/$/, ''));
 }
 
 function qbtGet(apiPath) {
   const base = qbtBaseUrl();
+  if (!base) return Promise.resolve(null);
   const mod = base.protocol === 'https:' ? https : http;
   const headers = {
     'Referer': config.qbUrl,
@@ -73,6 +75,7 @@ function qbtGet(apiPath) {
 
 function qbtPost(apiPath, fields) {
   const base = qbtBaseUrl();
+  if (!base) return Promise.resolve(null);
   const mod = base.protocol === 'https:' ? https : http;
   const body = new URLSearchParams(fields).toString();
   const headers = {
@@ -100,6 +103,7 @@ function qbtPost(apiPath, fields) {
 
 function qbtPostMultipart(apiPath, files) {
   const base = qbtBaseUrl();
+  if (!base) return Promise.resolve(null);
   const mod = base.protocol === 'https:' ? https : http;
   const boundary = '----qBtDesktop' + Date.now().toString(16);
   const parts = [];
@@ -257,6 +261,11 @@ function createMainWindow() {
 function loadQbittorrent() {
   if (!mainWindow) return;
   qbtCookie = null; // reset session on reload/URL change
+  if (!config.qbUrl) {
+    mainWindow.loadFile(path.join(__dirname, 'error.html'));
+    openSettings();
+    return;
+  }
   const url = config.qbUrl.replace(/\/$/, '');
   mainWindow.loadURL(url).catch(() => {});
   mainWindow.setTitle('qBittorrent Desktop — ' + url);
