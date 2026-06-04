@@ -12,6 +12,10 @@ A Windows 11 desktop client for qBittorrent running on a remote machine or Docke
 - **Path mapping** — maps remote server paths to local mounted paths (e.g. `/downloads` → `Z:\qbittorrent`)
 - **.torrent file association** — open .torrent files directly with the app
 
+## Related
+
+This app is designed to work alongside **[pia-qbittorrent-docker](https://github.com/GeorgeAL78/pia-qbittorrent-docker)** — a Docker setup that runs qBittorrent behind a PIA VPN. If you're using that stack, point the Web UI URL in Settings to your Docker host and port.
+
 ## Requirements
 
 - [Node.js](https://nodejs.org/) (v18+)
