@@ -44,7 +44,7 @@ On first launch, a Settings window will open. Enter your qBittorrent Web UI URL 
 Produces an NSIS installer and a portable `.exe` in `dist/`:
 
 ```bash
-npm run dist
+npm run build
 ```
 
 ## Settings
@@ -58,6 +58,38 @@ npm run dist
 | Clipboard monitor | Watch clipboard for magnet links |
 | Remote download path | The save path as qBittorrent sees it (e.g. `/downloads`) |
 | Local path | Where that path is mounted on this PC (e.g. `Z:\qbittorrent`) |
+
+## Changelog
+
+### v1.0.8
+- Updated screenshots in README with faithful qBittorrent UI mockup
+
+### v1.0.7
+- Added main window and tray right-click menu screenshots to README
+
+### v1.0.6
+- Added settings screenshot to README
+
+### v1.0.5
+- Version number now shown in tray right-click menu
+- Version number now shown at the bottom of the Settings window
+
+### v1.0.4
+- Settings window now opens automatically on first launch when no URL is configured
+- Fixed crash when URL is empty (clipboard monitor, completion checker)
+- "Start minimized" is now greyed out when "Run at Windows startup" is enabled
+
+### v1.0.3
+- Removed hardcoded personal IP from default config
+
+### v1.0.2
+- Added **Run at Windows startup** option — launches minimized to tray on login
+
+### v1.0.1
+- Fixed notification header showing `electron.app.qBittorrent Desktop`
+
+### v1.0.0
+- Initial release
 
 ## License
 
