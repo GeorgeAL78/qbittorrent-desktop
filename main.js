@@ -22,7 +22,7 @@ function loadConfig() {
     if (fs.existsSync(configPath)) return JSON.parse(fs.readFileSync(configPath, 'utf8'));
   } catch (e) {}
   return {
-    qbUrl: 'http://192.168.1.169:8888',
+    qbUrl: '',
     username: '',
     password: '',
     startMinimized: false,
