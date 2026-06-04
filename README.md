@@ -24,8 +24,9 @@ This app is designed to work alongside **[pia-qbittorrent-docker](https://github
 
 ## Requirements
 
-- [Node.js](https://nodejs.org/) (v18+)
 - qBittorrent running with Web UI enabled (local or remote/Docker)
+
+> **To build from source** (optional): [Node.js](https://nodejs.org/) v18+ is required. The pre-built `.exe` files in Releases are fully self-contained — no Node.js needed to run them.
 
 ## Setup
 
