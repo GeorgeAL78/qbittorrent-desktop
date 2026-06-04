@@ -14,7 +14,9 @@ A Windows 11 desktop client for qBittorrent running on a remote machine or Docke
 
 ## Screenshots
 
-![Settings](assets/screenshots/settings.png)
+| Main Window | Settings | Tray Menu |
+|---|---|---|
+| ![Main Window](assets/screenshots/main.png) | ![Settings](assets/screenshots/settings.png) | ![Tray Menu](assets/screenshots/tray-menu.png) |
 
 ## Related
 
