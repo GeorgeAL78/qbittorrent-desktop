@@ -61,14 +61,8 @@ npm run build
 
 ## Changelog
 
-### v1.0.8
-- Updated screenshots in README with faithful qBittorrent UI mockup
-
 ### v1.0.7
-- Added main window and tray right-click menu screenshots to README
-
-### v1.0.6
-- Added settings screenshot to README
+- Added screenshots to README (main window, settings, tray menu)
 
 ### v1.0.5
 - Version number now shown in tray right-click menu
