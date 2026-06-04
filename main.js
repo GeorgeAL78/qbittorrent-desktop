@@ -291,6 +291,8 @@ function createTray() {
 function updateTrayMenu() {
   if (!tray) return;
   tray.setContextMenu(Menu.buildFromTemplate([
+    { label: `qBittorrent Desktop v${app.getVersion()}`, enabled: false },
+    { type: 'separator' },
     { label: 'Open qBittorrent Desktop', click: showMainWindow },
     { type: 'separator' },
     { label: 'Add Magnet from Clipboard', click: addMagnetFromClipboard },
@@ -568,6 +570,7 @@ async function openQbtAddDialog(magnetUrl) {
 }
 
 // ── IPC ──────────────────────────────────────────────────────────────────────
+ipcMain.handle('get-version', () => app.getVersion());
 ipcMain.handle('get-config', () => config);
 ipcMain.handle('save-config', (event, newConfig) => {
   const urlChanged = newConfig.qbUrl !== config.qbUrl;

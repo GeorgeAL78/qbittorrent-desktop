@@ -173,6 +173,13 @@
       color: #666;
       margin-top: 4px;
     }
+
+    .version {
+      font-size: 11px;
+      color: #444;
+      text-align: center;
+      margin-top: 16px;
+    }
   </style>
 </head>
 <body>
@@ -296,6 +303,13 @@
     });
 
     document.getElementById('btnCancel').addEventListener('click', () => window.close());
+
+    api.getVersion().then(v => {
+      const el = document.createElement('div');
+      el.className = 'version';
+      el.textContent = `qBittorrent Desktop v${v}`;
+      document.body.appendChild(el);
+    });
 
     function toggleStartMinimized() {
       const runAtStartup = document.getElementById('runAtStartup').checked;
