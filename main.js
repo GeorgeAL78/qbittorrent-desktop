@@ -2,6 +2,7 @@ const {
   app, BrowserWindow, Tray, Menu, shell, ipcMain,
   Notification, clipboard, nativeImage, dialog, screen,
 } = require('electron');
+const { autoUpdater } = require('electron-updater');
 const path = require('path');
 const fs = require('fs');
 const http = require('http');
@@ -193,6 +194,7 @@ let tray = null;
 let clipboardInterval = null;
 let lastClipboardText = '';
 let isQuitting = false;
+let updateDownloaded = false;
 
 function getMagnetName(magnetUrl) {
   const match = magnetUrl.match(/[?&]dn=([^&]+)/);
@@ -293,6 +295,9 @@ function updateTrayMenu() {
   if (!tray) return;
   tray.setContextMenu(Menu.buildFromTemplate([
     { label: `qBittorrent Desktop v${app.getVersion()}`, enabled: false },
+    ...(updateDownloaded
+      ? [{ label: '⟳ Restart to Install Update', click: () => { isQuitting = true; autoUpdater.quitAndInstall(); } }]
+      : []),
     { type: 'separator' },
     { label: 'Open qBittorrent Desktop', click: showMainWindow },
     { type: 'separator' },
@@ -300,6 +305,7 @@ function updateTrayMenu() {
     { label: 'Add .torrent File…', click: addTorrentFromDialog },
     { type: 'separator' },
     { label: 'Settings', click: openSettings },
+    { label: 'Check for Updates', click: checkForUpdatesManual },
     { label: 'Open in Browser', click: () => shell.openExternal(config.qbUrl) },
     { type: 'separator' },
     { label: 'Quit', click: () => { isQuitting = true; app.quit(); } },
@@ -645,6 +651,63 @@ function applyMagnetHandler() {
   }
 }
 
+// ── Auto-update (electron-updater + GitHub Releases) ─────────────────────────
+function setupAutoUpdater() {
+  if (!app.isPackaged) return; // updater needs a packaged build + published latest.yml
+
+  autoUpdater.autoDownload = true;
+  autoUpdater.autoInstallOnAppQuit = true;
+
+  autoUpdater.on('update-downloaded', (info) => {
+    updateDownloaded = true;
+    updateTrayMenu();
+    showTrayNotification(
+      `Update ${info.version} is ready. Click to restart and install.`,
+      () => { isQuitting = true; autoUpdater.quitAndInstall(); },
+    );
+  });
+
+  // Stay silent on errors — a failed update check shouldn't nag the user.
+  autoUpdater.on('error', () => {});
+
+  autoUpdater.checkForUpdates().catch(() => {});
+  // Re-check periodically while the app stays open (every 6 hours).
+  setInterval(() => autoUpdater.checkForUpdates().catch(() => {}), 6 * 60 * 60 * 1000);
+}
+
+function checkForUpdatesManual() {
+  if (!app.isPackaged) {
+    dialog.showMessageBox(mainWindow || undefined, {
+      type: 'info', title: 'Updates',
+      message: 'Auto-update is only available in the installed version.',
+    });
+    return;
+  }
+  if (updateDownloaded) {
+    isQuitting = true;
+    autoUpdater.quitAndInstall();
+    return;
+  }
+  autoUpdater.checkForUpdates()
+    .then((r) => {
+      const latest = r && r.updateInfo && r.updateInfo.version;
+      if (latest && latest !== app.getVersion()) {
+        showTrayNotification(`Downloading update ${latest}…`);
+      } else {
+        dialog.showMessageBox(mainWindow || undefined, {
+          type: 'info', title: 'Up to Date',
+          message: `You're on the latest version (v${app.getVersion()}).`,
+        });
+      }
+    })
+    .catch(() => {
+      dialog.showMessageBox(mainWindow || undefined, {
+        type: 'error', title: 'Update Check Failed',
+        message: 'Could not check for updates. Please try again later.',
+      });
+    });
+}
+
 // ── App lifecycle ────────────────────────────────────────────────────────────
 app.on('second-instance', async (event, commandLine) => {
   showMainWindow();
@@ -658,6 +721,7 @@ app.whenReady().then(async () => {
   createTray();
   startClipboardMonitor();
   startCompletionMonitor();
+  setupAutoUpdater();
 
   applyMagnetHandler();
 

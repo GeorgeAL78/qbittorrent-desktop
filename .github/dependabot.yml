@@ -1,0 +1,20 @@
+version: 2
+updates:
+  # Keep npm dependencies (Electron, electron-builder, etc.) up to date.
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    groups:
+      # Bundle minor/patch bumps into a single PR to cut noise.
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
+  # Keep the GitHub Actions in the release workflow up to date.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"

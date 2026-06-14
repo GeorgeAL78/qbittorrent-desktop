@@ -62,7 +62,10 @@ npm run build
 
 ## Changelog
 
-### v1.0.13 *(latest)*
+### v1.0.14 *(latest)*
+- **Automatic updates** — the installed app now checks GitHub Releases on launch and updates itself in the background (tray menu shows "Restart to Install Update" when ready). Adds a "Check for Updates" item to the tray menu. Existing users need to install this version manually once; updates are automatic from here on. (Installed version only — the portable build does not self-update.)
+
+### v1.0.13
 - Updated Electron from 36 to 40, clearing 17 security advisories (including Windows-relevant `setAsDefaultProtocolClient` and `setLoginItemSettings` fixes)
 
 ### v1.0.12
