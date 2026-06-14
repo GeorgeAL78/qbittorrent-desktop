@@ -1,0 +1,53 @@
+name: Release
+
+# Trigger by pushing a version tag, e.g.:
+#   npm version patch --no-git-tag-version
+#   git commit -am "v1.2.3" && git push
+#   git tag v1.2.3 && git push origin v1.2.3
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: windows-latest
+    permissions:
+      contents: write   # create the GitHub Release + upload assets
+      packages: write   # publish to GitHub Packages
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build and publish to GitHub Releases
+        # electron-builder reads the "publish" config in package.json,
+        # creates the release for this tag, and uploads the installer,
+        # portable exe, latest.yml and blockmaps (latest.yml is what
+        # makes auto-update work).
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx electron-builder --win --x64 --publish always
+
+      # Configure auth for GitHub Packages only now, so the scoped
+      # registry can't interfere with the public-registry npm ci above.
+      - name: Set up Node.js for GitHub Packages
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@georgeal78'
+
+      - name: Publish to GitHub Packages
+        # Best-effort: a packages failure shouldn't fail the release.
+        continue-on-error: true
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm publish
