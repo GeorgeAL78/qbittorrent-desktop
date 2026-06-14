@@ -61,7 +61,10 @@ npm run build
 
 ## Changelog
 
-### v1.0.8 *(latest)*
+### v1.0.9 *(latest)*
+- Clicking a magnet link now shows the popup instead of silently adding
+
+### v1.0.8
 - Added screenshots to README (main window, settings, tray menu)
 
 ### v1.0.5
