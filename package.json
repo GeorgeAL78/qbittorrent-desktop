@@ -31,7 +31,8 @@
     "publish": {
       "provider": "github",
       "owner": "GeorgeAL78",
-      "repo": "qbittorrent-desktop"
+      "repo": "qbittorrent-desktop",
+      "releaseType": "release"
     },
     "win": {
       "target": [
