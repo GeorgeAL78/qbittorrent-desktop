@@ -65,7 +65,10 @@ npm run build
 
 ## Changelog
 
-### v1.0.14 *(latest)*
+### v1.0.15 *(latest)*
+- Added a small app-version badge in the bottom-left corner of the main window
+
+### v1.0.14
 - **Automatic updates** — the installed app now checks GitHub Releases on launch and updates itself in the background (tray menu shows "Restart to Install Update" when ready). Adds a "Check for Updates" item to the tray menu. Existing users need to install this version manually once; updates are automatic from here on. (Installed version only — the portable build does not self-update.)
 
 ### v1.0.13
