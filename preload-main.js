@@ -76,6 +76,32 @@ async function openRowPath(row) {
   } catch {}
 }
 
+// ── App-version badge in the bottom-right corner ───────────────────────────
+// Injected into the qBittorrent page; re-runs on every load/navigation since
+// the preload runs each time. Subtle and click-through so it never blocks UI.
+async function addVersionBadge() {
+  try {
+    if (document.getElementById('qbd-version-badge')) return;
+    const version = await ipcRenderer.invoke('get-version');
+    const badge = document.createElement('div');
+    badge.id = 'qbd-version-badge';
+    badge.textContent = 'Desktop v' + version;
+    badge.style.cssText = [
+      'position:fixed', 'bottom:6px', 'left:8px', 'z-index:2147483647',
+      'font:11px/1 "Segoe UI",system-ui,sans-serif', 'color:#9fb0c3',
+      'background:rgba(13,27,42,0.55)', 'padding:3px 7px', 'border-radius:5px',
+      'opacity:0.6', 'pointer-events:none', 'user-select:none',
+    ].join(';');
+    document.body.appendChild(badge);
+  } catch {}
+}
+
+if (document.readyState === 'loading') {
+  window.addEventListener('DOMContentLoaded', addVersionBadge);
+} else {
+  addVersionBadge();
+}
+
 // ── Expose desktop API to the page (direct assignment; no contextBridge) ───
 window.qbDesktop = {
   getConfig:     ()    => ipcRenderer.invoke('get-config'),
