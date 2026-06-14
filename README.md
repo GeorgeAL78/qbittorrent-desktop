@@ -56,12 +56,16 @@ npm run build
 | Start minimized | Launch directly to the system tray |
 | Minimize to tray on close | Keep running in background when window is closed |
 | Clipboard monitor | Watch clipboard for magnet links |
+| Register as default magnet link handler | Register the app as the OS handler for `magnet:` links |
 | Remote download path | The save path as qBittorrent sees it (e.g. `/downloads`) |
 | Local path | Where that path is mounted on this PC (e.g. `Z:\qbittorrent`) |
 
 ## Changelog
 
-### v1.0.9 *(latest)*
+### v1.0.10 *(latest)*
+- Added option to register/unregister the app as the default magnet link handler (Settings → Behaviour)
+
+### v1.0.9
 - Clicking a magnet link now shows the popup instead of silently adding
 
 ### v1.0.8

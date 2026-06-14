@@ -29,6 +29,7 @@ function loadConfig() {
     minimizeToTray: true,
     runAtStartup: false,
     clipboardMonitor: true,
+    registerMagnetHandler: true,
     remoteDownloadPath: '/downloads',
     localDownloadPath: 'Z:\\qbittorrent',
     windowBounds: { width: 1280, height: 800 },
@@ -578,6 +579,7 @@ ipcMain.handle('save-config', (event, newConfig) => {
     openAtLogin: !!config.runAtStartup,
     args: config.runAtStartup ? ['--hidden'] : [],
   });
+  applyMagnetHandler();
   updateTrayMenu();
   if (urlChanged) loadQbittorrent();
   return { ok: true };
@@ -630,6 +632,19 @@ ipcMain.handle('popup-dismiss', () => {
   lastClipboardText = pendingMagnetUrl || lastClipboardText;
 });
 
+// ── Magnet protocol handler ──────────────────────────────────────────────────
+function applyMagnetHandler() {
+  if (config.registerMagnetHandler !== false) {
+    if (process.defaultApp && process.argv.length >= 2) {
+      app.setAsDefaultProtocolClient('magnet', process.execPath, [path.resolve(process.argv[1])]);
+    } else {
+      app.setAsDefaultProtocolClient('magnet');
+    }
+  } else {
+    app.removeAsDefaultProtocolClient('magnet');
+  }
+}
+
 // ── App lifecycle ────────────────────────────────────────────────────────────
 app.on('second-instance', async (event, commandLine) => {
   showMainWindow();
@@ -644,12 +659,7 @@ app.whenReady().then(async () => {
   startClipboardMonitor();
   startCompletionMonitor();
 
-  // Register magnet: URI scheme
-  if (process.defaultApp && process.argv.length >= 2) {
-    app.setAsDefaultProtocolClient('magnet', process.execPath, [path.resolve(process.argv[1])]);
-  } else {
-    app.setAsDefaultProtocolClient('magnet');
-  }
+  applyMagnetHandler();
 
   // Handle magnet/torrent passed on first launch
   const { magnet, torrent } = parseCommandLine(process.argv.slice(1));
