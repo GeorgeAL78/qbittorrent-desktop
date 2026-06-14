@@ -5,8 +5,10 @@ A Windows 11 desktop client for qBittorrent running on a remote machine or Docke
 ## Features
 
 - **Full qBittorrent Web UI** — 100% feature parity, running inside a native window
-- **System tray** — minimize to tray, optional start minimized
+- **Magnet link handler** — register as the default `magnet:` handler so clicking a magnet link in any browser opens the app with an add-confirmation popup
 - **Clipboard monitor** — automatically detects magnet links copied to clipboard and offers to add them
+- **System tray** — minimize to tray, optionally start minimized, or launch automatically at Windows startup
+- **Automatic updates** — the installed app checks GitHub Releases on launch and updates itself in the background
 - **Completion notifications** — desktop popup when a torrent finishes downloading
 - **Double-click to open** — double-click any torrent or file in the Contents tab to open it in Explorer
 - **Path mapping** — maps remote server paths to local mounted paths (e.g. `/downloads` → `Z:\qbittorrent`)
@@ -53,6 +55,7 @@ npm run build
 |---|---|
 | Web UI URL | Full URL to your qBittorrent Web UI including port |
 | Username / Password | Leave blank if authentication is disabled |
+| Run at Windows startup | Launch the app automatically on login (minimized to tray) |
 | Start minimized | Launch directly to the system tray |
 | Minimize to tray on close | Keep running in background when window is closed |
 | Clipboard monitor | Watch clipboard for magnet links |
