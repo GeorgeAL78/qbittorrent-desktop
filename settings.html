@@ -238,6 +238,13 @@
         <span class="slider"></span>
       </label>
     </div>
+    <div class="toggle-row" style="margin-top:12px">
+      <span class="toggle-label">Register as default magnet link handler</span>
+      <label class="toggle">
+        <input type="checkbox" id="registerMagnetHandler" />
+        <span class="slider"></span>
+      </label>
+    </div>
   </div>
 
   <div class="section">
@@ -275,6 +282,7 @@
       toggleStartMinimized();
       document.getElementById('minimizeToTray').checked = cfg.minimizeToTray !== false;
       document.getElementById('clipboardMonitor').checked = cfg.clipboardMonitor !== false;
+      document.getElementById('registerMagnetHandler').checked = cfg.registerMagnetHandler !== false;
       document.getElementById('remoteDownloadPath').value = cfg.remoteDownloadPath || '/downloads';
       document.getElementById('localDownloadPath').value = cfg.localDownloadPath || 'Z:\\qbittorrent';
     }
@@ -294,6 +302,7 @@
         startMinimized: document.getElementById('startMinimized').checked,
         minimizeToTray: document.getElementById('minimizeToTray').checked,
         clipboardMonitor: document.getElementById('clipboardMonitor').checked,
+        registerMagnetHandler: document.getElementById('registerMagnetHandler').checked,
         remoteDownloadPath: document.getElementById('remoteDownloadPath').value.trim() || '/downloads',
         localDownloadPath: document.getElementById('localDownloadPath').value.trim() || 'Z:\\qbittorrent',
       };
