@@ -62,7 +62,10 @@ npm run build
 
 ## Changelog
 
-### v1.0.10 *(latest)*
+### v1.0.11 *(latest)*
+- Fixed magnet link handler: NSIS installer now properly registers the `magnet:` protocol in Windows so clicking magnet links in a browser opens the app and shows the popup
+
+### v1.0.10
 - Added option to register/unregister the app as the default magnet link handler (Settings → Behaviour)
 
 ### v1.0.9
