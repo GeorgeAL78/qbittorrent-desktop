@@ -45,14 +45,13 @@ jobs:
         run: |
           $repo = "${{ github.repository }}"
           $tag  = "${{ github.ref_name }}"
-          $assets = gh api "repos/$repo/releases/tags/$tag" --jq '.assets[] | "\(.id)`t\(.name)"'
-          foreach ($line in $assets) {
-            $id, $name = $line -split "`t"
-            if ($name -like "*.blockmap" -or $name -eq "latest.yml") { continue }
-            if ($name -like "*Setup*.exe") {
-              gh api -X PATCH "repos/$repo/releases/assets/$id" -f label="$name (Installer)"
-            } elseif ($name -like "*.exe") {
-              gh api -X PATCH "repos/$repo/releases/assets/$id" -f label="$name (Portable)"
+          $assets = gh api "repos/$repo/releases/tags/$tag" --jq '.assets' | ConvertFrom-Json
+          foreach ($a in $assets) {
+            if ($a.name -like "*.blockmap" -or $a.name -eq "latest.yml") { continue }
+            if ($a.name -like "*Setup*.exe") {
+              gh api -X PATCH "repos/$repo/releases/assets/$($a.id)" -f label="$($a.name) (Installer)"
+            } elseif ($a.name -like "*.exe") {
+              gh api -X PATCH "repos/$repo/releases/assets/$($a.id)" -f label="$($a.name) (Portable)"
             }
           }
 
