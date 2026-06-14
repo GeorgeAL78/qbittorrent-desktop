@@ -62,7 +62,10 @@ npm run build
 
 ## Changelog
 
-### v1.0.12 *(latest)*
+### v1.0.13 *(latest)*
+- Updated Electron from 36 to 40, clearing 17 security advisories (including Windows-relevant `setAsDefaultProtocolClient` and `setLoginItemSettings` fixes)
+
+### v1.0.12
 - Fixed magnet links not opening from Chromium browsers (Edge/Chrome). The installer now registers the app's **Capabilities** so it appears in Windows *Default apps → Choose defaults by link type → magnet*. Set it there once and browsers will route magnet links to the app. (Installer is now per-machine so it can write the system-wide association.)
 
 ### v1.0.11
