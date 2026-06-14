@@ -36,6 +36,26 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx electron-builder --win --x64 --publish always
 
+      - name: Label release assets (Installer / Portable)
+        # electron-builder uploads assets without display labels; add the
+        # "(Installer)" / "(Portable)" suffixes shown on the Releases page.
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $repo = "${{ github.repository }}"
+          $tag  = "${{ github.ref_name }}"
+          $assets = gh api "repos/$repo/releases/tags/$tag" --jq '.assets[] | "\(.id)`t\(.name)"'
+          foreach ($line in $assets) {
+            $id, $name = $line -split "`t"
+            if ($name -like "*.blockmap" -or $name -eq "latest.yml") { continue }
+            if ($name -like "*Setup*.exe") {
+              gh api -X PATCH "repos/$repo/releases/assets/$id" -f label="$name (Installer)"
+            } elseif ($name -like "*.exe") {
+              gh api -X PATCH "repos/$repo/releases/assets/$id" -f label="$name (Portable)"
+            }
+          }
+
       # Configure auth for GitHub Packages only now, so the scoped
       # registry can't interfere with the public-registry npm ci above.
       - name: Set up Node.js for GitHub Packages
