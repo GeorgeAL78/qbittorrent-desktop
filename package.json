@@ -1,6 +1,6 @@
 {
   "name": "@georgeal78/qbittorrent-desktop",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "description": "qBittorrent Desktop Client for Windows 11",
   "main": "main.js",
   "author": "qBittorrent Desktop",
@@ -46,10 +46,12 @@
     },
     "nsis": {
       "oneClick": false,
+      "perMachine": true,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "qBittorrent Desktop"
+      "shortcutName": "qBittorrent Desktop",
+      "include": "build/installer.nsh"
     },
     "files": [
       "**/*",
