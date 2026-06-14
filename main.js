@@ -377,9 +377,7 @@ async function handleFileArg(filePath) {
 
 async function handleMagnetArg(magnetUrl) {
   if (!magnetUrl) return;
-  const ok = await addMagnetViaApi(magnetUrl);
-  showTrayNotification(ok ? 'Magnet link added to qBittorrent.' : 'Failed to add magnet link.');
-  if (ok && mainWindow && mainWindow.isVisible()) mainWindow.webContents.reload();
+  showMagnetPopup(magnetUrl);
 }
 
 function parseCommandLine(argv) {
