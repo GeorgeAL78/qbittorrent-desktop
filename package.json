@@ -1,6 +1,6 @@
 {
   "name": "@georgeal78/qbittorrent-desktop",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "description": "qBittorrent Desktop Client for Windows 11",
   "main": "main.js",
   "author": "qBittorrent Desktop",
@@ -21,7 +21,7 @@
     "electron-store": "^10.0.0"
   },
   "devDependencies": {
-    "electron": "^36.0.0",
+    "electron": "^40.0.0",
     "electron-builder": "^26.0.0"
   },
   "build": {
