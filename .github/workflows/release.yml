@@ -27,6 +27,21 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Ensure release exists (avoids electron-builder create race)
+        # electron-builder uploads multiple artifacts in parallel; each one
+        # does check-then-create on the release, which can race and 422 with
+        # "already_exists". Pre-creating the release means every uploader
+        # finds it already there and just uploads.
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $tag = "${{ github.ref_name }}"
+          gh release view $tag --repo "${{ github.repository }}" 2>$null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create $tag --repo "${{ github.repository }}" --title $tag --notes "Release $tag"
+          }
+
       - name: Build and publish to GitHub Releases
         # electron-builder reads the "publish" config in package.json,
         # creates the release for this tag, and uploads the installer,
