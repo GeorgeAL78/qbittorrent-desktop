@@ -65,7 +65,10 @@ npm run build
 
 ## Changelog
 
-### v1.0.15 *(latest)*
+### v1.0.16 *(latest)*
+- Installer now shows the GPL-3.0 license agreement with an "I Agree" step
+
+### v1.0.15
 - Added a small app-version badge in the bottom-left corner of the main window
 
 ### v1.0.14
