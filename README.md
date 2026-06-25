@@ -44,7 +44,7 @@ A Windows 11 desktop client for qBittorrent running on a remote machine or Docke
 - **System tray** — minimize to tray, optionally start minimized, or launch automatically at Windows startup
 - **Automatic updates** — the installed app checks GitHub Releases on launch and updates itself in the background
 - **Completion notifications** — desktop popup when a torrent finishes downloading
-- **Double-click to open** — double-click a torrent in the transfer list to open its download folder in Explorer
+- **Double-click to open** — double-click a torrent in the transfer list to open its download folder, or double-click a file/folder in the Content tab to open it directly
 - **Path mapping** — maps remote server paths to local mounted paths (e.g. `/downloads` → `Z:\qbittorrent`)
 - **.torrent file association** — open .torrent files directly with the app
 
@@ -114,7 +114,10 @@ npm run build
 
 ## Changelog
 
-### v1.0.19 *(latest)*
+### v1.0.20 *(latest)*
+- Content tab: double-click a file to open it with its default app, or double-click a folder to open it in Explorer
+
+### v1.0.19
 - Settings window is now tabbed (Connection / Behaviour / Paths) — fits cleanly without scrolling or clipping
 
 ### v1.0.18
