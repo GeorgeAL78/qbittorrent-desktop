@@ -15,7 +15,9 @@
   "scripts": {
     "start": "electron .",
     "build": "electron-builder --win --x64",
-    "build:portable": "electron-builder --win portable --x64"
+    "build:portable": "electron-builder --win portable --x64",
+    "update-components": "node scripts/update-components.js",
+    "version": "node scripts/update-components.js && git add README.md"
   },
   "dependencies": {
     "electron-updater": "^6.8.9"
