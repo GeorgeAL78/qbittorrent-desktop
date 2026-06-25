@@ -65,7 +65,10 @@ npm run build
 
 ## Changelog
 
-### v1.0.16 *(latest)*
+### v1.0.17 *(latest)*
+- Updated Electron from 40 to 42 (Chromium 148, Node 24) — latest security and rendering-engine fixes
+
+### v1.0.16
 - Installer now shows the GPL-3.0 license agreement with an "I Agree" step
 
 ### v1.0.15
