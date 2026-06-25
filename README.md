@@ -114,7 +114,10 @@ npm run build
 
 ## Changelog
 
-### v1.0.20 *(latest)*
+### v1.0.21 *(latest)*
+- Auto-updates now install silently — the installer/license page no longer interrupts the update (it still shows on a normal first install). Fixes the clunky update flow introduced when the license page was added in v1.0.16.
+
+### v1.0.20
 - Content tab: double-click a file to open it with its default app, or double-click a folder to open it in Explorer
 
 ### v1.0.19

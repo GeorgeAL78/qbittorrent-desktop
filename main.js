@@ -296,7 +296,7 @@ function updateTrayMenu() {
   tray.setContextMenu(Menu.buildFromTemplate([
     { label: `qBittorrent Desktop v${app.getVersion()}`, enabled: false },
     ...(updateDownloaded
-      ? [{ label: '⟳ Restart to Install Update', click: () => { isQuitting = true; autoUpdater.quitAndInstall(); } }]
+      ? [{ label: '⟳ Restart to Install Update', click: () => { isQuitting = true; autoUpdater.quitAndInstall(true, true); } }]
       : []),
     { type: 'separator' },
     { label: 'Open qBittorrent Desktop', click: showMainWindow },
@@ -682,7 +682,7 @@ function setupAutoUpdater() {
     updateTrayMenu();
     showTrayNotification(
       `Update ${info.version} is ready. Click to restart and install.`,
-      () => { isQuitting = true; autoUpdater.quitAndInstall(); },
+      () => { isQuitting = true; autoUpdater.quitAndInstall(true, true); },
     );
   });
 
@@ -704,7 +704,7 @@ function checkForUpdatesManual() {
   }
   if (updateDownloaded) {
     isQuitting = true;
-    autoUpdater.quitAndInstall();
+    autoUpdater.quitAndInstall(true, true);
     return;
   }
   autoUpdater.checkForUpdates()
