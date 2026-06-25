@@ -28,6 +28,7 @@
   <a href="https://github.com/GeorgeAL78/qbittorrent-desktop/releases/latest"><b>Download</b></a> •
   <a href="#setup">Setup</a> •
   <a href="#build">Build</a> •
+  <a href="#components">Components</a> •
   <a href="#settings">Settings</a> •
   <a href="#changelog">Changelog</a> •
   <a href="#license">License</a>
@@ -81,6 +82,17 @@ Produces an NSIS installer and a portable `.exe` in `dist/`:
 ```bash
 npm run build
 ```
+
+## Components
+
+| Component | Version |
+|---|---|
+| Electron | 42.4.1 |
+| Chromium | 148.0.7778.265 |
+| Node.js (bundled) | 24.16.0 |
+| V8 | 14.8.178.31 |
+| electron-builder | 26.15.3 |
+| electron-updater | 6.8.9 |
 
 ## Settings
 
