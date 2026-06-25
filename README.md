@@ -1,5 +1,38 @@
 # qBittorrent Desktop
 
+<p align="center">
+  <a href="https://github.com/GeorgeAL78/qbittorrent-desktop/actions/workflows/release.yml"><img src="https://img.shields.io/github/actions/workflow/status/GeorgeAL78/qbittorrent-desktop/release.yml?label=release%20build" alt="Release build"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/GeorgeAL78/qbittorrent-desktop" alt="License"></a>
+  <img src="https://img.shields.io/badge/platform-Windows%2011-blue" alt="Platform">
+  <img src="https://img.shields.io/badge/built%20with-Electron-47848F?logo=electron&logoColor=white" alt="Built with Electron">
+</p>
+
+<p align="center">
+  <a href="https://github.com/GeorgeAL78/qbittorrent-desktop/releases/latest"><img src="https://img.shields.io/github/v/release/GeorgeAL78/qbittorrent-desktop?label=latest%20release" alt="Latest release"></a>
+  <img src="https://img.shields.io/github/release-date/GeorgeAL78/qbittorrent-desktop?label=release%20date" alt="Release date">
+  <a href="https://github.com/GeorgeAL78/qbittorrent-desktop/releases"><img src="https://img.shields.io/github/downloads/GeorgeAL78/qbittorrent-desktop/total?label=downloads" alt="Total downloads"></a>
+  <img src="https://img.shields.io/github/commits-since/GeorgeAL78/qbittorrent-desktop/latest?label=commits%20since" alt="Commits since latest release">
+  <img src="https://img.shields.io/github/last-commit/GeorgeAL78/qbittorrent-desktop?label=last%20commit" alt="Last commit">
+</p>
+
+<p align="center">
+  <a href="https://github.com/GeorgeAL78/qbittorrent-desktop/issues"><img src="https://img.shields.io/github/issues/GeorgeAL78/qbittorrent-desktop?label=issues" alt="Open issues"></a>
+  <img src="https://img.shields.io/github/languages/code-size/GeorgeAL78/qbittorrent-desktop?label=code%20size" alt="Code size">
+  <img src="https://img.shields.io/github/repo-size/GeorgeAL78/qbittorrent-desktop?label=repo%20size" alt="Repo size">
+  <img src="https://img.shields.io/github/languages/top/GeorgeAL78/qbittorrent-desktop" alt="Top language">
+</p>
+
+<p align="center">
+  <a href="#features">Features</a> •
+  <a href="#screenshots">Screenshots</a> •
+  <a href="https://github.com/GeorgeAL78/qbittorrent-desktop/releases/latest"><b>Download</b></a> •
+  <a href="#setup">Setup</a> •
+  <a href="#build">Build</a> •
+  <a href="#settings">Settings</a> •
+  <a href="#changelog">Changelog</a> •
+  <a href="#license">License</a>
+</p>
+
 A Windows 11 desktop client for qBittorrent running on a remote machine or Docker container. Wraps the qBittorrent Web UI in a native Electron app with added desktop integrations.
 
 ## Features
