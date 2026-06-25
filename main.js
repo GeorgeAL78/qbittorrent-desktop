@@ -319,8 +319,16 @@ function showMainWindow() {
   mainWindow.focus();
 }
 
+// Showing a Windows toast makes Electron auto-create a Start-menu shortcut
+// carrying our AppUserModelID. In dev that shortcut points at the bare
+// electron.exe (no app path) and can hijack toast activation, so only ever
+// show notifications from the packaged app.
+function canNotify() {
+  return app.isPackaged && Notification.isSupported();
+}
+
 function showTrayNotification(body, onClick) {
-  if (!Notification.isSupported()) return;
+  if (!canNotify()) return;
   const n = new Notification({ title: 'qBittorrent Desktop', body, icon: getIconPath() || undefined, silent: true });
   n.on('click', onClick || showMainWindow);
   n.show();
@@ -447,7 +455,7 @@ async function checkCompletions(initialLoad = false) {
     for (const t of torrents) {
       const prev = knownTorrents.get(t.hash);
       const done = t.progress >= 1;
-      if (!initialLoad && prev !== undefined && prev < 1 && done) {
+      if (!initialLoad && prev !== undefined && prev < 1 && done && canNotify()) {
         const n = new Notification({
           title: 'Download Complete',
           body: t.name,
