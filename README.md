@@ -98,7 +98,10 @@ npm run build
 
 ## Changelog
 
-### v1.0.17 *(latest)*
+### v1.0.18 *(latest)*
+- Fixed the magnet-detected popup clipping its buttons when the torrent name is long (popup now sizes to the window correctly)
+
+### v1.0.17
 - Updated Electron from 40 to 42 (Chromium 148, Node 24) — latest security and rendering-engine fixes
 
 ### v1.0.16
