@@ -404,7 +404,7 @@ function showMagnetPopup(magnetUrl) {
   }
 
   const { workAreaSize } = screen.getPrimaryDisplay();
-  const W = 420, H = 150;
+  const W = 420, H = 172;
   magnetPopupWindow = new BrowserWindow({
     width: W, height: H,
     x: workAreaSize.width - W - 16,
