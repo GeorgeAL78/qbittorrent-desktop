@@ -594,16 +594,18 @@ ipcMain.handle('save-config', (event, newConfig) => {
 ipcMain.handle('open-settings', () => openSettings());
 ipcMain.handle('reload', () => loadQbittorrent());
 
-ipcMain.handle('open-local-path', (event, remotePath) => {
+function mapRemoteToLocal(remotePath) {
   const remoteBase = (config.remoteDownloadPath || '/downloads').replace(/\/+$/, '');
   const localBase  = (config.localDownloadPath  || 'Z:\\qbittorrent').replace(/[/\\]+$/, '');
-
-  let localPath = remotePath;
   if (remotePath.startsWith(remoteBase)) {
     const rel = remotePath.slice(remoteBase.length).replace(/\//g, path.sep);
-    localPath = localBase + rel;
+    return localBase + rel;
   }
+  return remotePath;
+}
 
+ipcMain.handle('open-local-path', (event, remotePath) => {
+  const localPath = mapRemoteToLocal(remotePath);
   try {
     const stat = fs.statSync(localPath);
     if (stat.isDirectory()) shell.openPath(localPath);
@@ -613,6 +615,22 @@ ipcMain.handle('open-local-path', (event, remotePath) => {
       type: 'error',
       title: 'Cannot Open Path',
       message: `Path not found:\n${localPath}\n\nCheck the path mapping in Settings.`,
+    });
+  }
+});
+
+// Contents tab: open the clicked file with its default app, or open the folder.
+ipcMain.handle('open-content-path', async (event, remotePath) => {
+  const localPath = mapRemoteToLocal(remotePath);
+  try {
+    if (!fs.existsSync(localPath)) throw new Error('not found');
+    const err = await shell.openPath(localPath); // file → default app, folder → Explorer
+    if (err) throw new Error(err);
+  } catch {
+    dialog.showMessageBox(mainWindow || undefined, {
+      type: 'error',
+      title: 'Cannot Open',
+      message: `Could not open:\n${localPath}\n\nCheck the path mapping in Settings.`,
     });
   }
 });

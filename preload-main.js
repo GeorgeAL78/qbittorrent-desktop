@@ -1,5 +1,9 @@
 const { ipcRenderer } = require('electron');
 
+// Keep a reference to the real addEventListener before we patch the prototype
+// below, so our own Contents-tab listener isn't wrapped by that patch.
+const nativeAddEventListener = EventTarget.prototype.addEventListener;
+
 // ── Intercept ALL dblclick listeners before qBittorrent's page scripts run ──
 // We wrap every addEventListener('dblclick', ...) call so that when the click
 // lands on a table row, our handler runs and qBt's never does.
@@ -25,6 +29,9 @@ const { ipcRenderer } = require('electron');
 
 // ── Open the local mapped path for a clicked torrent/file row ─────────────
 async function openRowPath(row) {
+  // Rows in the Contents tab are handled by the dedicated listener below.
+  if (row.closest('#torrentFilesTableDiv')) return;
+
   // Strategy 1: hash in a data attribute or element id
   let hash = row.dataset.hash
     || row.getAttribute('data-hash')
@@ -101,6 +108,78 @@ if (document.readyState === 'loading') {
 } else {
   addVersionBadge();
 }
+
+// ── Contents tab: double-click a folder to open it, a file to open it ──────
+// qBittorrent's Content tab is a tree table (#torrentFilesTableDiv). We grab
+// the table instance (it isn't global) by wrapping its populateTable, then on
+// double-click resolve the clicked node's full path from qBt's own file tree.
+let contentTable = null;
+(function captureContentTable() {
+  const patch = () => {
+    const TFT = window.qBittorrent
+      && window.qBittorrent.DynamicTable
+      && window.qBittorrent.DynamicTable.TorrentFilesTable;
+    if (!TFT) return false;
+    if (!TFT.prototype.__qbdContentPatched) {
+      const orig = TFT.prototype.populateTable;
+      TFT.prototype.populateTable = function () { contentTable = this; return orig.apply(this, arguments); };
+      TFT.prototype.__qbdContentPatched = true;
+    }
+    return true;
+  };
+  if (patch()) return;
+  const iv = setInterval(() => { if (patch()) clearInterval(iv); }, 500);
+  setTimeout(() => clearInterval(iv), 60000);
+})();
+
+// Hash of the torrent whose contents are shown = the selected torrent row.
+function selectedTorrentHash() {
+  for (const tr of document.querySelectorAll('tr.selected')) {
+    const id = String(tr.dataset.rowId ?? tr.rowId ?? '');
+    if (/^[0-9a-f]{40}$/i.test(id)) return id.toLowerCase();
+  }
+  return null;
+}
+
+// Files carry a full .path; folders don't, so walk up the tree via .root/.name.
+function nodeRelativePath(node) {
+  if (node.path) return node.path;
+  const parts = [];
+  for (let n = node; n && n.name; n = n.root) parts.unshift(n.name);
+  return parts.join('/');
+}
+
+async function openContentNode(row) {
+  if (!contentTable) return;
+  const rowId = row.dataset.rowId ?? row.rowId;
+  if (rowId === undefined || rowId === null || rowId === '') return;
+  const node = contentTable.getNode(rowId)
+    ?? contentTable.getNode(Number(rowId))
+    ?? contentTable.getNode(String(rowId));
+  if (!node) return;
+  const rel = nodeRelativePath(node);
+  if (!rel) return;
+  const hash = selectedTorrentHash();
+  if (!hash) return;
+  try {
+    const r = await fetch('/api/v2/torrents/info?hashes=' + hash);
+    const list = await r.json();
+    if (!list.length) return;
+    const savePath = String(list[0].save_path || '').replace(/[/\\]+$/, '');
+    if (!savePath) return;
+    ipcRenderer.invoke('open-content-path', savePath + '/' + rel);
+  } catch {}
+}
+
+// Registered via the native addEventListener (capture phase) so it isn't
+// wrapped by the dblclick patch above and always fires for Contents rows.
+nativeAddEventListener.call(document, 'dblclick', (e) => {
+  const row = e.target.closest('tr');
+  if (!row || row.closest('thead') || !row.closest('#torrentFilesTableDiv')) return;
+  e.preventDefault();
+  e.stopImmediatePropagation();
+  openContentNode(row);
+}, true);
 
 // ── Expose desktop API to the page (direct assignment; no contextBridge) ───
 window.qbDesktop = {
