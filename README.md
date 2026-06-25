@@ -98,7 +98,10 @@ npm run build
 
 ## Changelog
 
-### v1.0.18 *(latest)*
+### v1.0.19 *(latest)*
+- Settings window is now tabbed (Connection / Behaviour / Paths) — fits cleanly without scrolling or clipping
+
+### v1.0.18
 - Fixed the magnet-detected popup clipping its buttons when the torrent name is long (popup now sizes to the window correctly)
 
 ### v1.0.17

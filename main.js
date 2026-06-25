@@ -492,7 +492,8 @@ function startClipboardMonitor() {
 function openSettings() {
   if (settingsWindow) { settingsWindow.focus(); return; }
   settingsWindow = new BrowserWindow({
-    width: 520, height: 520,
+    width: 520, height: 550,
+    useContentSize: true, // size refers to the web content area (robust across Electron/DPI)
     title: 'qBittorrent Desktop — Settings',
     icon: getIconPath(),
     parent: mainWindow || undefined,

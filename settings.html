@@ -13,6 +13,7 @@
       color: #e0e0e0;
       padding: 28px 32px;
       user-select: none;
+      overflow-y: auto;
     }
 
     h1 {
@@ -180,6 +181,35 @@
       text-align: center;
       margin-top: 16px;
     }
+
+    .tabs {
+      display: flex;
+      gap: 2px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid #0f3460;
+    }
+
+    .tab {
+      padding: 9px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #889;
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .tab:hover { color: #ccc; }
+
+    .tab.active {
+      color: #4fc3f7;
+      border-bottom-color: #4fc3f7;
+    }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
   </style>
 </head>
 <body>
@@ -191,73 +221,82 @@
     Settings
   </h1>
 
-  <div class="section">
-    <div class="section-title">Connection</div>
-    <div class="field">
-      <label for="qbUrl">qBittorrent Web UI URL</label>
-      <input type="url" id="qbUrl" placeholder="http://192.168.1.100:8080" />
-      <div class="hint">Include protocol and port, e.g. http://192.168.1.100:8080</div>
-    </div>
-    <div class="field">
-      <label for="username">Username (optional)</label>
-      <input type="text" id="username" placeholder="admin" autocomplete="off" />
-    </div>
-    <div class="field">
-      <label for="password">Password (optional)</label>
-      <input type="password" id="password" placeholder="Leave blank if no auth" autocomplete="off" />
+  <div class="tabs">
+    <button type="button" class="tab active" data-tab="connection">Connection</button>
+    <button type="button" class="tab" data-tab="behaviour">Behaviour</button>
+    <button type="button" class="tab" data-tab="paths">Paths</button>
+  </div>
+
+  <div class="tab-panel active" id="tab-connection">
+    <div class="section">
+      <div class="field">
+        <label for="qbUrl">qBittorrent Web UI URL</label>
+        <input type="url" id="qbUrl" placeholder="http://192.168.1.100:8080" />
+        <div class="hint">Include protocol and port, e.g. http://192.168.1.100:8080</div>
+      </div>
+      <div class="field">
+        <label for="username">Username (optional)</label>
+        <input type="text" id="username" placeholder="admin" autocomplete="off" />
+      </div>
+      <div class="field">
+        <label for="password">Password (optional)</label>
+        <input type="password" id="password" placeholder="Leave blank if no auth" autocomplete="off" />
+      </div>
     </div>
   </div>
 
-  <div class="section">
-    <div class="section-title">Behaviour</div>
-    <div class="toggle-row">
-      <span class="toggle-label">Run at Windows startup (minimized to tray)</span>
-      <label class="toggle">
-        <input type="checkbox" id="runAtStartup" />
-        <span class="slider"></span>
-      </label>
-    </div>
-    <div class="toggle-row" style="margin-top:12px">
-      <span class="toggle-label">Start minimized to tray</span>
-      <label class="toggle">
-        <input type="checkbox" id="startMinimized" />
-        <span class="slider"></span>
-      </label>
-    </div>
-    <div class="toggle-row" style="margin-top:12px">
-      <span class="toggle-label">Minimize to tray on close</span>
-      <label class="toggle">
-        <input type="checkbox" id="minimizeToTray" />
-        <span class="slider"></span>
-      </label>
-    </div>
-    <div class="toggle-row" style="margin-top:12px">
-      <span class="toggle-label">Monitor clipboard for magnet links</span>
-      <label class="toggle">
-        <input type="checkbox" id="clipboardMonitor" />
-        <span class="slider"></span>
-      </label>
-    </div>
-    <div class="toggle-row" style="margin-top:12px">
-      <span class="toggle-label">Register as default magnet link handler</span>
-      <label class="toggle">
-        <input type="checkbox" id="registerMagnetHandler" />
-        <span class="slider"></span>
-      </label>
+  <div class="tab-panel" id="tab-behaviour">
+    <div class="section">
+      <div class="toggle-row">
+        <span class="toggle-label">Run at Windows startup (minimized to tray)</span>
+        <label class="toggle">
+          <input type="checkbox" id="runAtStartup" />
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row" style="margin-top:12px">
+        <span class="toggle-label">Start minimized to tray</span>
+        <label class="toggle">
+          <input type="checkbox" id="startMinimized" />
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row" style="margin-top:12px">
+        <span class="toggle-label">Minimize to tray on close</span>
+        <label class="toggle">
+          <input type="checkbox" id="minimizeToTray" />
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row" style="margin-top:12px">
+        <span class="toggle-label">Monitor clipboard for magnet links</span>
+        <label class="toggle">
+          <input type="checkbox" id="clipboardMonitor" />
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row" style="margin-top:12px">
+        <span class="toggle-label">Register as default magnet link handler</span>
+        <label class="toggle">
+          <input type="checkbox" id="registerMagnetHandler" />
+          <span class="slider"></span>
+        </label>
+      </div>
     </div>
   </div>
 
-  <div class="section">
-    <div class="section-title">Path Mapping (double-click to open)</div>
-    <div class="field">
-      <label for="remoteDownloadPath">Remote download path (on qBittorrent server)</label>
-      <input type="text" id="remoteDownloadPath" placeholder="/downloads" />
-      <div class="hint">The save path as qBittorrent sees it, e.g. /downloads</div>
-    </div>
-    <div class="field">
-      <label for="localDownloadPath">Local path (on this PC)</label>
-      <input type="text" id="localDownloadPath" placeholder="Z:\qbittorrent" />
-      <div class="hint">Where that folder is mounted on your PC, e.g. Z:\qbittorrent</div>
+  <div class="tab-panel" id="tab-paths">
+    <div class="section">
+      <div class="field">
+        <label for="remoteDownloadPath">Remote download path (on qBittorrent server)</label>
+        <input type="text" id="remoteDownloadPath" placeholder="/downloads" />
+        <div class="hint">The save path as qBittorrent sees it, e.g. /downloads</div>
+      </div>
+      <div class="field">
+        <label for="localDownloadPath">Local path (on this PC)</label>
+        <input type="text" id="localDownloadPath" placeholder="Z:\qbittorrent" />
+        <div class="hint">Where that folder is mounted on your PC, e.g. Z:\qbittorrent</div>
+      </div>
     </div>
   </div>
 
@@ -271,6 +310,16 @@
   <script>
     const api = window.qbDesktop;
     let cfg = {};
+
+    // Tab switching
+    document.querySelectorAll('.tab').forEach((tab) => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach((t) => t.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach((p) => p.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+      });
+    });
 
     async function init() {
       cfg = await api.getConfig();
@@ -290,6 +339,8 @@
     document.getElementById('btnSave').addEventListener('click', async () => {
       const url = document.getElementById('qbUrl').value.trim().replace(/\/$/, '');
       if (!url) {
+        document.querySelector('.tab[data-tab="connection"]').click();
+        document.getElementById('qbUrl').focus();
         showStatus('URL is required.', true);
         return;
       }
