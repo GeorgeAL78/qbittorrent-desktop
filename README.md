@@ -24,6 +24,7 @@
 
 <p align="center">
   <a href="#features">Features</a> •
+  <a href="#how-it-works">How it works</a> •
   <a href="#screenshots">Screenshots</a> •
   <a href="https://github.com/GeorgeAL78/qbittorrent-desktop/releases/latest"><b>Download</b></a> •
   <a href="#setup">Setup</a> •
@@ -66,6 +67,34 @@ A Windows 11 desktop client for qBittorrent running on a remote machine or Docke
 | Main Window | Settings | Tray Menu |
 |---|---|---|
 | ![Main Window](assets/screenshots/main-window.png) | ![Settings](assets/screenshots/settings.png) | ![Tray Menu](assets/screenshots/tray-menu.png) |
+
+## How it works
+
+### Native window around the Web UI
+qBittorrent Desktop loads your qBittorrent **Web UI** inside a native window (Electron/Chromium), so you get the full, familiar qBittorrent interface — every tab, column, and setting — without keeping a browser tab open. It communicates over qBittorrent's Web API, so it works with **any** reachable instance (local, remote server, NAS, or Docker). Everything below is added on top of that web interface.
+
+### Magnet links from your browser
+When the handler is enabled, the app registers itself with Windows as the opener for `magnet:` links. Click a magnet on any site and a small confirmation popup appears in the corner showing the torrent's name, with **Add to qBittorrent** / **Dismiss** (it auto-dismisses after ~12 seconds). To make it the default opener, set it once in **Settings → Apps → Default apps → Choose defaults by link type → `MAGNET`**. See [Settings](#settings) to toggle the registration.
+
+### Clipboard monitoring
+With *Monitor clipboard for magnet links* enabled, the app watches your clipboard and shows the same add-confirmation popup whenever you copy a magnet link — useful for sites that expose the magnet as plain text rather than a real `magnet:` anchor.
+
+### System tray & startup
+Closing the window keeps the app running in the system tray (toggleable). The tray menu lets you re-open the app, add a magnet from the clipboard, add a `.torrent` file, open Settings, check for updates, or open the Web UI in your browser. It can also **start minimized** and **launch automatically at Windows login** (minimized to tray) so it's always running in the background.
+
+### Automatic updates
+The installed app checks GitHub Releases on launch and periodically afterward, downloads new versions in the background, and surfaces a **⟳ Restart to Install Update** entry in the tray when one is ready. Updates install silently and the app relaunches itself. (The portable build doesn't self-update — only the installer version does.)
+
+### Open files & folders locally (path mapping)
+qBittorrent refers to files using **its own** paths (e.g. `/downloads` inside a Docker container), which don't exist as-is on your Windows PC. **Path mapping** bridges that: you tell the app the remote base path and where it's mounted locally (e.g. `/downloads` → `Z:\qbittorrent`). Once set:
+- **Double-click a torrent** in the transfer list → opens its download folder in Explorer.
+- **Double-click a file or folder** in the **Content** tab → opens that exact file in its default app, or that folder in Explorer.
+
+### Completion notifications
+When a torrent finishes downloading, you get a native Windows notification; clicking it brings the app to the front.
+
+### .torrent file association
+The app registers as a handler for `.torrent` files, so double-clicking a downloaded `.torrent` adds it straight to qBittorrent (you can also use **Add .torrent File…** from the tray).
 
 ## Related
 
