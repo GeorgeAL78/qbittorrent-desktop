@@ -18,23 +18,38 @@ if (!gotLock) { app.quit(); process.exit(0); }
 // ── Config ──────────────────────────────────────────────────────────────────
 const configPath = path.join(app.getPath('userData'), 'config.json');
 
+const DEFAULT_CONFIG = {
+  qbUrl: '',
+  username: '',
+  password: '',
+  startMinimized: false,
+  minimizeToTray: true,
+  runAtStartup: false,
+  clipboardMonitor: true,
+  registerMagnetHandler: true,
+  autoAddMagnets: false,
+  completionNotifications: true,
+  autoUpdate: true,
+  magnetPopupTimeout: 12,
+  pathMappings: [{ remote: '/downloads', local: 'Z:\\qbittorrent' }],
+  windowBounds: { width: 1280, height: 800 },
+};
+
 function loadConfig() {
+  let cfg = {};
   try {
-    if (fs.existsSync(configPath)) return JSON.parse(fs.readFileSync(configPath, 'utf8'));
+    if (fs.existsSync(configPath)) cfg = JSON.parse(fs.readFileSync(configPath, 'utf8'));
   } catch (e) {}
-  return {
-    qbUrl: '',
-    username: '',
-    password: '',
-    startMinimized: false,
-    minimizeToTray: true,
-    runAtStartup: false,
-    clipboardMonitor: true,
-    registerMagnetHandler: true,
-    remoteDownloadPath: '/downloads',
-    localDownloadPath: 'Z:\\qbittorrent',
-    windowBounds: { width: 1280, height: 800 },
-  };
+  // Migrate the old single remote/local pair to the pathMappings array.
+  if (!Array.isArray(cfg.pathMappings) && (cfg.remoteDownloadPath || cfg.localDownloadPath)) {
+    cfg.pathMappings = [{
+      remote: cfg.remoteDownloadPath || '/downloads',
+      local: cfg.localDownloadPath || 'Z:\\qbittorrent',
+    }];
+  }
+  delete cfg.remoteDownloadPath;
+  delete cfg.localDownloadPath;
+  return { ...DEFAULT_CONFIG, ...cfg };
 }
 
 function saveConfig(cfg) {
@@ -401,7 +416,26 @@ async function handleFileArg(filePath) {
 
 async function handleMagnetArg(magnetUrl) {
   if (!magnetUrl) return;
-  showMagnetPopup(magnetUrl);
+  handleDetectedMagnet(magnetUrl);
+}
+
+// Either add the magnet straight away (if the user opted in) or show the popup.
+async function handleDetectedMagnet(magnetUrl) {
+  if (!magnetUrl) return;
+  if (config.autoAddMagnets) {
+    const ok = await addMagnetViaApi(magnetUrl);
+    if (ok) {
+      showTrayNotification(`Magnet added: ${getMagnetName(magnetUrl)}`);
+      if (mainWindow && mainWindow.isVisible()) mainWindow.webContents.reload();
+    } else {
+      dialog.showMessageBox(mainWindow || undefined, {
+        type: 'error', title: 'Failed to Add Magnet',
+        message: 'Could not add the magnet link.\n\nMake sure qBittorrent is reachable and credentials are correct in Settings.',
+      });
+    }
+  } else {
+    showMagnetPopup(magnetUrl);
+  }
 }
 
 function parseCommandLine(argv) {
@@ -445,9 +479,10 @@ function showMagnetPopup(magnetUrl) {
   magnetPopupWindow.once('ready-to-show', () => magnetPopupWindow.show());
   magnetPopupWindow.on('closed', () => { magnetPopupWindow = null; });
 
+  const seconds = Number(config.magnetPopupTimeout) > 0 ? Number(config.magnetPopupTimeout) : 12;
   const timer = setTimeout(() => {
     if (magnetPopupWindow && !magnetPopupWindow.isDestroyed()) magnetPopupWindow.close();
-  }, 12000);
+  }, seconds * 1000);
   magnetPopupWindow.on('closed', () => clearTimeout(timer));
 }
 
@@ -473,7 +508,7 @@ async function checkCompletions(initialLoad = false) {
         // incomplete → complete. Already-complete torrents (seeded on startup)
         // and torrents that merely re-check after a server restart are in
         // completedHashes, so they never re-notify.
-        if (!initialLoad && !completedHashes.has(t.hash) && prev !== undefined && prev < 1 && canNotify()) {
+        if (!initialLoad && config.completionNotifications !== false && !completedHashes.has(t.hash) && prev !== undefined && prev < 1 && canNotify()) {
           const n = new Notification({
             title: 'Download Complete',
             body: t.name,
@@ -512,7 +547,7 @@ function startClipboardMonitor() {
       const text = clipboard.readText().trim();
       if (text === lastClipboardText) return;
       lastClipboardText = text;
-      if (isMagnetLink(text)) showMagnetPopup(text);
+      if (isMagnetLink(text)) handleDetectedMagnet(text);
     } catch (e) {}
   }, 1000);
 }
@@ -521,7 +556,7 @@ function startClipboardMonitor() {
 function openSettings() {
   if (settingsWindow) { settingsWindow.focus(); return; }
   settingsWindow = new BrowserWindow({
-    width: 520, height: 550,
+    width: 520, height: 580,
     useContentSize: true, // size refers to the web content area (robust across Electron/DPI)
     title: 'qBittorrent Desktop — Settings',
     icon: getIconPath(),
@@ -638,11 +673,22 @@ ipcMain.on('docker-version', (event, version) => {
 });
 
 function mapRemoteToLocal(remotePath) {
-  const remoteBase = (config.remoteDownloadPath || '/downloads').replace(/\/+$/, '');
-  const localBase  = (config.localDownloadPath  || 'Z:\\qbittorrent').replace(/[/\\]+$/, '');
-  if (remotePath.startsWith(remoteBase)) {
-    const rel = remotePath.slice(remoteBase.length).replace(/\//g, path.sep);
-    return localBase + rel;
+  const mappings = Array.isArray(config.pathMappings) ? config.pathMappings : [];
+  // Pick the mapping whose remote base is the longest matching prefix, so more
+  // specific mappings (e.g. /downloads/movies) win over general ones (/downloads).
+  let best = null;
+  for (const m of mappings) {
+    const remoteBase = (m.remote || '').replace(/\/+$/, '');
+    if (!remoteBase) continue;
+    if (remotePath === remoteBase || remotePath.startsWith(remoteBase + '/')) {
+      if (!best || remoteBase.length > best.base.length) {
+        best = { base: remoteBase, local: (m.local || '').replace(/[/\\]+$/, '') };
+      }
+    }
+  }
+  if (best) {
+    const rel = remotePath.slice(best.base.length).replace(/\//g, path.sep);
+    return best.local + rel;
   }
   return remotePath;
 }
@@ -682,6 +728,7 @@ ipcMain.handle('open-content-path', async (event, remotePath) => {
 ipcMain.handle('popup-get-magnet', () => ({
   url: pendingMagnetUrl,
   name: pendingMagnetUrl ? getMagnetName(pendingMagnetUrl) : '',
+  timeout: Number(config.magnetPopupTimeout) > 0 ? Number(config.magnetPopupTimeout) : 12,
 }));
 
 ipcMain.handle('popup-open-dialog', async () => {
@@ -717,8 +764,8 @@ function applyMagnetHandler() {
 function setupAutoUpdater() {
   if (!app.isPackaged) return; // updater needs a packaged build + published latest.yml
 
-  autoUpdater.autoDownload = true;
-  autoUpdater.autoInstallOnAppQuit = true;
+  autoUpdater.autoDownload = config.autoUpdate !== false;
+  autoUpdater.autoInstallOnAppQuit = config.autoUpdate !== false;
 
   autoUpdater.on('update-downloaded', (info) => {
     updateDownloaded = true;
@@ -732,9 +779,12 @@ function setupAutoUpdater() {
   // Stay silent on errors — a failed update check shouldn't nag the user.
   autoUpdater.on('error', () => {});
 
-  autoUpdater.checkForUpdates().catch(() => {});
+  // Only check automatically when enabled; the tray "Check for Updates" still works.
+  if (config.autoUpdate !== false) autoUpdater.checkForUpdates().catch(() => {});
   // Re-check periodically while the app stays open (every 6 hours).
-  setInterval(() => autoUpdater.checkForUpdates().catch(() => {}), 6 * 60 * 60 * 1000);
+  setInterval(() => {
+    if (config.autoUpdate !== false) autoUpdater.checkForUpdates().catch(() => {});
+  }, 6 * 60 * 60 * 1000);
 }
 
 function checkForUpdatesManual() {

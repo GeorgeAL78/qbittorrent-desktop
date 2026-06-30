@@ -7,13 +7,24 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
+    html, body { height: 100%; }
+
     body {
       font-family: 'Segoe UI', system-ui, sans-serif;
       background: #1a1a2e;
       color: #e0e0e0;
       padding: 28px 32px;
       user-select: none;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .panels {
+      flex: 1 1 auto;
       overflow-y: auto;
+      min-height: 0;
     }
 
     h1 {
@@ -227,6 +238,7 @@
     <button type="button" class="tab" data-tab="paths">Paths</button>
   </div>
 
+  <div class="panels">
   <div class="tab-panel active" id="tab-connection">
     <div class="section">
       <div class="field">
@@ -282,22 +294,43 @@
           <span class="slider"></span>
         </label>
       </div>
+      <div class="toggle-row" style="margin-top:12px">
+        <span class="toggle-label">Add magnets immediately (skip the confirm popup)</span>
+        <label class="toggle">
+          <input type="checkbox" id="autoAddMagnets" />
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row" style="margin-top:12px">
+        <span class="toggle-label">Notify when a download finishes</span>
+        <label class="toggle">
+          <input type="checkbox" id="completionNotifications" />
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row" style="margin-top:12px">
+        <span class="toggle-label">Automatically download &amp; install updates</span>
+        <label class="toggle">
+          <input type="checkbox" id="autoUpdate" />
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="field" style="margin-top:14px">
+        <label for="magnetPopupTimeout">Magnet popup auto-dismiss (seconds)</label>
+        <input type="number" id="magnetPopupTimeout" min="3" max="120" style="width:100px" />
+      </div>
     </div>
   </div>
 
   <div class="tab-panel" id="tab-paths">
     <div class="section">
-      <div class="field">
-        <label for="remoteDownloadPath">Remote download path (on qBittorrent server)</label>
-        <input type="text" id="remoteDownloadPath" placeholder="/downloads" />
-        <div class="hint">The save path as qBittorrent sees it, e.g. /downloads</div>
+      <div class="hint" style="margin-bottom:12px">
+        Map qBittorrent's save paths to where they're mounted on this PC so double-click opens the right folder/file. Add one per drive; the most specific match wins.
       </div>
-      <div class="field">
-        <label for="localDownloadPath">Local path (on this PC)</label>
-        <input type="text" id="localDownloadPath" placeholder="Z:\qbittorrent" />
-        <div class="hint">Where that folder is mounted on your PC, e.g. Z:\qbittorrent</div>
-      </div>
+      <div id="pathMappings"></div>
+      <button type="button" class="btn-secondary" id="btnAddMapping" style="padding:6px 14px; font-size:12px;">+ Add mapping</button>
     </div>
+  </div>
   </div>
 
   <div class="status" id="status"></div>
@@ -332,9 +365,32 @@
       document.getElementById('minimizeToTray').checked = cfg.minimizeToTray !== false;
       document.getElementById('clipboardMonitor').checked = cfg.clipboardMonitor !== false;
       document.getElementById('registerMagnetHandler').checked = cfg.registerMagnetHandler !== false;
-      document.getElementById('remoteDownloadPath').value = cfg.remoteDownloadPath || '/downloads';
-      document.getElementById('localDownloadPath').value = cfg.localDownloadPath || 'Z:\\qbittorrent';
+      document.getElementById('autoAddMagnets').checked = !!cfg.autoAddMagnets;
+      document.getElementById('completionNotifications').checked = cfg.completionNotifications !== false;
+      document.getElementById('autoUpdate').checked = cfg.autoUpdate !== false;
+      document.getElementById('magnetPopupTimeout').value = Number(cfg.magnetPopupTimeout) > 0 ? Number(cfg.magnetPopupTimeout) : 12;
+
+      const mappings = (Array.isArray(cfg.pathMappings) && cfg.pathMappings.length)
+        ? cfg.pathMappings
+        : [{ remote: '/downloads', local: 'Z:\\qbittorrent' }];
+      document.getElementById('pathMappings').innerHTML = '';
+      mappings.forEach((m) => addMappingRow(m.remote || '', m.local || ''));
     }
+
+    function addMappingRow(remote, local) {
+      const row = document.createElement('div');
+      row.className = 'mapping-row';
+      row.style.cssText = 'display:flex; gap:8px; align-items:flex-start; margin-bottom:12px;';
+      row.innerHTML =
+        '<div style="flex:1"><input type="text" class="map-remote" placeholder="/downloads" /><div class="hint">Remote (qBittorrent)</div></div>' +
+        '<div style="flex:1"><input type="text" class="map-local" placeholder="Z:\\qbittorrent" /><div class="hint">Local (this PC)</div></div>' +
+        '<button type="button" class="map-remove" title="Remove" style="background:#1e2d4a;color:#9a9a9a;border:none;border-radius:6px;width:34px;height:35px;cursor:pointer;flex-shrink:0;font-size:14px;">&times;</button>';
+      row.querySelector('.map-remote').value = remote || '';
+      row.querySelector('.map-local').value = local || '';
+      row.querySelector('.map-remove').addEventListener('click', () => row.remove());
+      document.getElementById('pathMappings').appendChild(row);
+    }
+    document.getElementById('btnAddMapping').addEventListener('click', () => addMappingRow('', ''));
 
     document.getElementById('btnSave').addEventListener('click', async () => {
       const url = document.getElementById('qbUrl').value.trim().replace(/\/$/, '');
@@ -354,9 +410,17 @@
         minimizeToTray: document.getElementById('minimizeToTray').checked,
         clipboardMonitor: document.getElementById('clipboardMonitor').checked,
         registerMagnetHandler: document.getElementById('registerMagnetHandler').checked,
-        remoteDownloadPath: document.getElementById('remoteDownloadPath').value.trim() || '/downloads',
-        localDownloadPath: document.getElementById('localDownloadPath').value.trim() || 'Z:\\qbittorrent',
+        autoAddMagnets: document.getElementById('autoAddMagnets').checked,
+        completionNotifications: document.getElementById('completionNotifications').checked,
+        autoUpdate: document.getElementById('autoUpdate').checked,
+        magnetPopupTimeout: Math.min(120, Math.max(3, parseInt(document.getElementById('magnetPopupTimeout').value, 10) || 12)),
+        pathMappings: Array.from(document.querySelectorAll('#pathMappings .mapping-row')).map((r) => ({
+          remote: r.querySelector('.map-remote').value.trim(),
+          local: r.querySelector('.map-local').value.trim(),
+        })).filter((m) => m.remote && m.local),
       };
+      delete newCfg.remoteDownloadPath;
+      delete newCfg.localDownloadPath;
       await api.saveConfig(newCfg);
       showStatus('Settings saved!', false);
       setTimeout(() => window.close(), 800);

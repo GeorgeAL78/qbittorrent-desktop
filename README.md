@@ -134,12 +134,21 @@ npm run build
 | Minimize to tray on close | Keep running in background when window is closed |
 | Clipboard monitor | Watch clipboard for magnet links |
 | Register as default magnet link handler | Register the app as the OS handler for `magnet:` links |
-| Remote download path | The save path as qBittorrent sees it (e.g. `/downloads`) |
-| Local path | Where that path is mounted on this PC (e.g. `Z:\qbittorrent`) |
+| Add magnets immediately | Add to qBittorrent directly, skipping the confirm popup |
+| Notify when a download finishes | Toggle desktop completion notifications |
+| Automatically download & install updates | Toggle auto-update (manual check still available) |
+| Magnet popup auto-dismiss | How long (seconds) the confirm popup stays before closing |
+| Path mappings | One or more remote→local pairs (e.g. `/downloads` → `Z:\qbittorrent`); the most specific match wins |
 
 ## Changelog
 
-### v1.0.26 *(latest)*
+### v1.0.27 *(latest)*
+- **Multiple path mappings** — map several qBittorrent save paths to different local drives (the most specific match wins); double-click now opens the right place across all of them
+- New Settings toggles: **add magnets without the confirm popup**, **completion notifications on/off**, **automatic updates on/off**
+- **Configurable magnet popup duration** (auto-dismiss seconds)
+- Settings tabs now scroll internally so Save/Cancel stay pinned
+
+### v1.0.26
 - Pinned `js-yaml` to a patched version (≥4.3.0) to clear a DoS advisory in the bundled auto-updater dependency
 
 ### v1.0.25
