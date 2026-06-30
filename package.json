@@ -1,6 +1,6 @@
 {
   "name": "@georgeal78/qbittorrent-desktop",
-  "version": "1.0.25",
+  "version": "1.0.26",
   "description": "qBittorrent Desktop Client for Windows 11",
   "main": "main.js",
   "author": "qBittorrent Desktop",
@@ -25,6 +25,9 @@
   "devDependencies": {
     "electron": "^42.5.0",
     "electron-builder": "^26.15.3"
+  },
+  "overrides": {
+    "js-yaml": "^4.3.0"
   },
   "build": {
     "appId": "com.qbittorrent.desktop",

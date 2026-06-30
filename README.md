@@ -139,7 +139,10 @@ npm run build
 
 ## Changelog
 
-### v1.0.25 *(latest)*
+### v1.0.26 *(latest)*
+- Pinned `js-yaml` to a patched version (≥4.3.0) to clear a DoS advisory in the bundled auto-updater dependency
+
+### v1.0.25
 - Added a **Desktop** menu to qBittorrent's menu bar (Settings, Check for Updates, Open in Browser)
 
 ### v1.0.24
