@@ -37,6 +37,8 @@
 
 A Windows 11 desktop client for qBittorrent running on a remote machine or Docker container. Wraps the qBittorrent Web UI in a native Electron app with added desktop integrations.
 
+> 🐳 **Integrates with [pia-qbittorrent-docker](https://github.com/GeorgeAL78/pia-qbittorrent-docker)** — a Docker stack that runs qBittorrent behind a PIA VPN. When connected to it, the title bar shows the running **container version**. The Docker stack is optional, though — this app works with **any** qBittorrent Web UI (local, remote, or NAS).
+
 ## Features
 
 - **Full qBittorrent Web UI** — 100% feature parity, running inside a native window
@@ -95,12 +97,6 @@ When a torrent finishes downloading, you get a native Windows notification; clic
 
 ### .torrent file association
 The app registers as a handler for `.torrent` files, so double-clicking a downloaded `.torrent` adds it straight to qBittorrent (you can also use **Add .torrent File…** from the tray).
-
-## Related
-
-This app works with **any** qBittorrent instance that has the Web UI enabled — a local install, a remote server, a NAS, or any Docker container. Just point the Web UI URL in Settings to your qBittorrent host and port (e.g. `http://192.168.1.50:8080`).
-
-It pairs especially well with **[pia-qbittorrent-docker](https://github.com/GeorgeAL78/pia-qbittorrent-docker)** — a Docker setup that runs qBittorrent behind a PIA VPN — but that stack is **not** required; any qBittorrent Web UI works.
 
 ## Requirements
 
