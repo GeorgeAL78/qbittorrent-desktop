@@ -197,6 +197,36 @@ nativeAddEventListener.call(document, 'dblclick', (e) => {
   attempt(0);
 })();
 
+// ── Inject a "Desktop" menu into qBittorrent's menu bar ────────────────────
+// The navbar is a CSS-hover menu (#desktopNavbar > ul > li), so a matching <li>
+// gets qBittorrent's styling and open-on-hover behaviour for free.
+(function injectDesktopMenu() {
+  const build = () => {
+    const navUl = document.querySelector('#desktopNavbar > ul');
+    if (!navUl) return false;
+    if (document.getElementById('qbd-desktop-menu')) return true;
+
+    const li = document.createElement('li');
+    li.id = 'qbd-desktop-menu';
+    li.innerHTML =
+      '<a class="returnFalse">Desktop</a>' +
+      '<ul>' +
+        '<li><a id="qbd-menu-settings">Settings</a></li>' +
+        '<li><a id="qbd-menu-update">Check for Updates</a></li>' +
+        '<li class="divider"><a id="qbd-menu-browser">Open in Browser</a></li>' +
+      '</ul>';
+    navUl.appendChild(li);
+
+    li.querySelector('#qbd-menu-settings').addEventListener('click', () => ipcRenderer.invoke('open-settings'));
+    li.querySelector('#qbd-menu-update').addEventListener('click', () => ipcRenderer.invoke('check-for-updates'));
+    li.querySelector('#qbd-menu-browser').addEventListener('click', () => ipcRenderer.invoke('open-in-browser'));
+    return true;
+  };
+  if (build()) return;
+  const iv = setInterval(() => { if (build()) clearInterval(iv); }, 500);
+  setTimeout(() => clearInterval(iv), 30000);
+})();
+
 // ── Expose desktop API to the page (direct assignment; no contextBridge) ───
 window.qbDesktop = {
   getConfig:     ()    => ipcRenderer.invoke('get-config'),
