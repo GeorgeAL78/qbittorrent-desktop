@@ -195,6 +195,7 @@ let clipboardInterval = null;
 let lastClipboardText = '';
 let isQuitting = false;
 let updateDownloaded = false;
+let dockerVersion = null; // version of the qBittorrent Docker image, if it advertises one
 
 function getMagnetName(magnetUrl) {
   const match = magnetUrl.match(/[?&]dn=([^&]+)/);
@@ -258,6 +259,14 @@ function createMainWindow() {
       return { action: 'deny' };
     }
     return { action: 'allow' };
+  });
+
+  // Append the Docker image version (if the server exposes it) to the title bar.
+  mainWindow.webContents.on('page-title-updated', (event, title) => {
+    if (dockerVersion) {
+      event.preventDefault();
+      mainWindow.setTitle(`${title}  —  Docker ${dockerVersion}`);
+    }
   });
 }
 
@@ -613,6 +622,18 @@ ipcMain.handle('save-config', (event, newConfig) => {
 });
 ipcMain.handle('open-settings', () => openSettings());
 ipcMain.handle('reload', () => loadQbittorrent());
+
+// The preload reads the X-Docker-Version response header (if the server sets it)
+// and reports it here; append it to the window title.
+ipcMain.on('docker-version', (event, version) => {
+  const v = (version || '').toString().trim();
+  if (!v || v === dockerVersion) return;
+  dockerVersion = v;
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    const base = mainWindow.getTitle().split('  —  Docker ')[0];
+    mainWindow.setTitle(`${base}  —  Docker ${dockerVersion}`);
+  }
+});
 
 function mapRemoteToLocal(remotePath) {
   const remoteBase = (config.remoteDownloadPath || '/downloads').replace(/\/+$/, '');

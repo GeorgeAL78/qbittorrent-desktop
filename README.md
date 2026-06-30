@@ -143,7 +143,10 @@ npm run build
 
 ## Changelog
 
-### v1.0.23 *(latest)*
+### v1.0.24 *(latest)*
+- The title bar now shows the qBittorrent **Docker image version** when the server advertises it (via an `X-Docker-Version` response header — supported by `pia-qbittorrent-docker`)
+
+### v1.0.23
 - Fixed completion notifications re-firing for every downloaded torrent whenever the qBittorrent server restarts (e.g. a Docker container reboot) — each torrent is now only notified once
 
 ### v1.0.22
