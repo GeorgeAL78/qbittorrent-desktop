@@ -181,6 +181,22 @@ nativeAddEventListener.call(document, 'dblclick', (e) => {
   openContentNode(row);
 }, true);
 
+// ── Report the qBittorrent Docker image version (custom response header) ───
+// pia-qbittorrent-docker sets an "X-Docker-Version" header; read it from any
+// WebUI response and hand it to the main process to show in the title bar.
+(function reportDockerVersion() {
+  const attempt = (n) => {
+    fetch('/api/v2/app/version', { cache: 'no-store' })
+      .then((r) => r.headers.get('X-Docker-Version'))
+      .then((v) => {
+        if (v) ipcRenderer.send('docker-version', v);
+        else if (n < 3) setTimeout(() => attempt(n + 1), 2000);
+      })
+      .catch(() => { if (n < 3) setTimeout(() => attempt(n + 1), 2000); });
+  };
+  attempt(0);
+})();
+
 // ── Expose desktop API to the page (direct assignment; no contextBridge) ───
 window.qbDesktop = {
   getConfig:     ()    => ipcRenderer.invoke('get-config'),
