@@ -143,7 +143,10 @@ npm run build
 
 ## Changelog
 
-### v1.0.22 *(latest)*
+### v1.0.23 *(latest)*
+- Fixed completion notifications re-firing for every downloaded torrent whenever the qBittorrent server restarts (e.g. a Docker container reboot) — each torrent is now only notified once
+
+### v1.0.22
 - Updated Electron to 42.5.0 (Chromium 148, Node 24) — latest security/patch release
 
 ### v1.0.21

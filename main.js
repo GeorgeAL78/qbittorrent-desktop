@@ -443,7 +443,8 @@ function showMagnetPopup(magnetUrl) {
 }
 
 // ── Completion notifications ─────────────────────────────────────────────────
-const knownTorrents = new Map(); // hash → progress (0–1)
+const knownProgress = new Map();    // hash → last seen progress (0–1)
+const completedHashes = new Set();  // hashes already counted as complete
 let completionPollInterval = null;
 
 async function checkCompletions(initialLoad = false) {
@@ -451,26 +452,37 @@ async function checkCompletions(initialLoad = false) {
     const res = await qbtApiCall(() => qbtGet('/api/v2/torrents/info'));
     if (!res || res.status !== 200) return;
     const torrents = JSON.parse(res.body);
+    // An empty list usually means the server is (re)starting — don't touch state,
+    // otherwise the recheck on restart would look like fresh completions.
+    if (!Array.isArray(torrents) || torrents.length === 0) return;
 
     for (const t of torrents) {
-      const prev = knownTorrents.get(t.hash);
+      const prev = knownProgress.get(t.hash);
       const done = t.progress >= 1;
-      if (!initialLoad && prev !== undefined && prev < 1 && done && canNotify()) {
-        const n = new Notification({
-          title: 'Download Complete',
-          body: t.name,
-          icon: getIconPath() || undefined,
-        });
-        n.on('click', showMainWindow);
-        n.show();
+      if (done) {
+        // Notify only the first time we actually watch a torrent go from
+        // incomplete → complete. Already-complete torrents (seeded on startup)
+        // and torrents that merely re-check after a server restart are in
+        // completedHashes, so they never re-notify.
+        if (!initialLoad && !completedHashes.has(t.hash) && prev !== undefined && prev < 1 && canNotify()) {
+          const n = new Notification({
+            title: 'Download Complete',
+            body: t.name,
+            icon: getIconPath() || undefined,
+          });
+          n.on('click', showMainWindow);
+          n.show();
+        }
+        completedHashes.add(t.hash);
       }
-      knownTorrents.set(t.hash, t.progress);
+      knownProgress.set(t.hash, t.progress);
     }
 
-    // Prune removed torrents
+    // Prune progress for removed torrents. Keep completedHashes — it's cheap and
+    // prevents re-notifying if a torrent briefly disappears during a restart.
     const hashes = new Set(torrents.map(t => t.hash));
-    for (const h of knownTorrents.keys()) {
-      if (!hashes.has(h)) knownTorrents.delete(h);
+    for (const h of [...knownProgress.keys()]) {
+      if (!hashes.has(h)) knownProgress.delete(h);
     }
   } catch {}
 }
