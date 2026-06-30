@@ -622,6 +622,8 @@ ipcMain.handle('save-config', (event, newConfig) => {
 });
 ipcMain.handle('open-settings', () => openSettings());
 ipcMain.handle('reload', () => loadQbittorrent());
+ipcMain.handle('check-for-updates', () => checkForUpdatesManual());
+ipcMain.handle('open-in-browser', () => { if (config.qbUrl) shell.openExternal(config.qbUrl); });
 
 // The preload reads the X-Docker-Version response header (if the server sets it)
 // and reports it here; append it to the window title.

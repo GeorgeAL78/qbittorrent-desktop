@@ -139,7 +139,10 @@ npm run build
 
 ## Changelog
 
-### v1.0.24 *(latest)*
+### v1.0.25 *(latest)*
+- Added a **Desktop** menu to qBittorrent's menu bar (Settings, Check for Updates, Open in Browser)
+
+### v1.0.24
 - The title bar now shows the qBittorrent **Docker image version** when the server advertises it (via an `X-Docker-Version` response header — supported by `pia-qbittorrent-docker`)
 
 ### v1.0.23
