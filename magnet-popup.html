@@ -136,15 +136,21 @@
 
   <script>
     const api = window.popupApi;
+    let total = 12;
     let seconds = 12;
+    const timerEl = document.getElementById('timer');
+    const progressEl = document.querySelector('.progress-bar');
 
     async function init() {
-      const { name } = await api.getMagnet();
+      const { name, timeout } = await api.getMagnet();
       document.getElementById('name').textContent = name || 'Unknown Torrent';
+      total = (timeout > 0) ? timeout : 12;
+      seconds = total;
+      timerEl.textContent = total + 's';
+      if (progressEl) progressEl.style.animationDuration = total + 's';
     }
 
     // Countdown timer
-    const timerEl = document.getElementById('timer');
     const tick = setInterval(() => {
       seconds--;
       timerEl.textContent = seconds + 's';
@@ -155,8 +161,8 @@
     api.onUpdate((url, name) => {
       document.getElementById('name').textContent = name || 'Unknown Torrent';
       // Restart countdown
-      seconds = 12;
-      timerEl.textContent = '12s';
+      seconds = total;
+      timerEl.textContent = total + 's';
     });
 
     document.getElementById('btnAdd').addEventListener('click', () => {
