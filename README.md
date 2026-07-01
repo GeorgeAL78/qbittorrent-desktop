@@ -142,7 +142,11 @@ npm run build
 
 ## Changelog
 
-### v1.0.27 *(latest)*
+### v1.0.28 *(latest)*
+- Installer is now **one-click** for reliable auto-updates — "Restart to Install Update" works first try (one UAC prompt → installs → relaunches). Removes the choose-install-folder and license-agreement pages (the project is still GPL-3.0 — see [LICENSE](LICENSE))
+- **Settings window is now resizable** and remembers its size
+
+### v1.0.27
 - **Multiple path mappings** — map several qBittorrent save paths to different local drives (the most specific match wins); double-click now opens the right place across all of them
 - New Settings toggles: **add magnets without the confirm popup**, **completion notifications on/off**, **automatic updates on/off**
 - **Configurable magnet popup duration** (auto-dismiss seconds)

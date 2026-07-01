@@ -555,18 +555,30 @@ function startClipboardMonitor() {
 // ── Settings window ──────────────────────────────────────────────────────────
 function openSettings() {
   if (settingsWindow) { settingsWindow.focus(); return; }
+  const saved = config.settingsBounds || {};
   settingsWindow = new BrowserWindow({
-    width: 520, height: 580,
+    width: saved.width || 520,
+    height: saved.height || 580,
+    minWidth: 440,
+    minHeight: 420,
     useContentSize: true, // size refers to the web content area (robust across Electron/DPI)
+    resizable: true,
     title: 'qBittorrent Desktop — Settings',
     icon: getIconPath(),
     parent: mainWindow || undefined,
-    resizable: false,
     backgroundColor: '#1a1a2e',
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false },
     autoHideMenuBar: true,
   });
   settingsWindow.loadFile(path.join(__dirname, 'settings.html'));
+
+  const saveSettingsBounds = () => {
+    if (!settingsWindow || settingsWindow.isDestroyed() || settingsWindow.isMinimized() || settingsWindow.isMaximized()) return;
+    const cs = settingsWindow.getContentBounds();
+    config.settingsBounds = { width: cs.width, height: cs.height };
+    saveConfig(config);
+  };
+  settingsWindow.on('resize', saveSettingsBounds);
   settingsWindow.on('closed', () => { settingsWindow = null; });
 }
 
