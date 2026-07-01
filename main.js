@@ -9,7 +9,19 @@ const http = require('http');
 const https = require('https');
 
 app.setAppUserModelId('qBittorrent Desktop');
-app.commandLine.appendSwitch('ignore-certificate-errors');
+
+// Accept self-signed / untrusted HTTPS certificates when the user allows it
+// (common for self-hosted / Docker qBittorrent behind HTTPS). Gated on config
+// so it can be turned off for strict validation. Governs the embedded Web UI;
+// the Node API calls use a matching rejectUnauthorized below.
+app.on('certificate-error', (event, webContents, url, error, certificate, callback) => {
+  if (config.allowUntrustedCerts !== false) {
+    event.preventDefault();
+    callback(true);
+  } else {
+    callback(false);
+  }
+});
 
 // ── Single-instance lock (required for second-instance + file-association) ──
 const gotLock = app.requestSingleInstanceLock();
@@ -27,6 +39,7 @@ const DEFAULT_CONFIG = {
   runAtStartup: false,
   clipboardMonitor: true,
   registerMagnetHandler: true,
+  allowUntrustedCerts: true,
   autoAddMagnets: false,
   completionNotifications: true,
   autoUpdate: true,
@@ -76,7 +89,7 @@ function qbtGet(apiPath) {
   };
   return new Promise((resolve, reject) => {
     const req = mod.request(
-      { hostname: base.hostname, port: parseInt(base.port) || (base.protocol === 'https:' ? 443 : 80), path: apiPath, method: 'GET', headers },
+      { hostname: base.hostname, port: parseInt(base.port) || (base.protocol === 'https:' ? 443 : 80), path: apiPath, method: 'GET', headers, rejectUnauthorized: config.allowUntrustedCerts === false },
       (res) => {
         const sc = res.headers['set-cookie'];
         if (sc) qbtCookie = sc.map(c => c.split(';')[0]).join('; ');
@@ -103,7 +116,7 @@ function qbtPost(apiPath, fields) {
   };
   return new Promise((resolve, reject) => {
     const req = mod.request(
-      { hostname: base.hostname, port: parseInt(base.port) || (base.protocol === 'https:' ? 443 : 80), path: apiPath, method: 'POST', headers },
+      { hostname: base.hostname, port: parseInt(base.port) || (base.protocol === 'https:' ? 443 : 80), path: apiPath, method: 'POST', headers, rejectUnauthorized: config.allowUntrustedCerts === false },
       (res) => {
         const sc = res.headers['set-cookie'];
         if (sc) qbtCookie = sc.map(c => c.split(';')[0]).join('; ');
@@ -141,7 +154,7 @@ function qbtPostMultipart(apiPath, files) {
   };
   return new Promise((resolve, reject) => {
     const req = mod.request(
-      { hostname: base.hostname, port: parseInt(base.port) || (base.protocol === 'https:' ? 443 : 80), path: apiPath, method: 'POST', headers },
+      { hostname: base.hostname, port: parseInt(base.port) || (base.protocol === 'https:' ? 443 : 80), path: apiPath, method: 'POST', headers, rejectUnauthorized: config.allowUntrustedCerts === false },
       (res) => {
         const sc = res.headers['set-cookie'];
         if (sc) qbtCookie = sc.map(c => c.split(';')[0]).join('; ');
@@ -656,6 +669,7 @@ ipcMain.handle('get-version', () => app.getVersion());
 ipcMain.handle('get-config', () => config);
 ipcMain.handle('save-config', (event, newConfig) => {
   const urlChanged = newConfig.qbUrl !== config.qbUrl;
+  const certChanged = newConfig.allowUntrustedCerts !== config.allowUntrustedCerts;
   config = { ...config, ...newConfig };
   saveConfig(config);
   app.setLoginItemSettings({
@@ -664,7 +678,7 @@ ipcMain.handle('save-config', (event, newConfig) => {
   });
   applyMagnetHandler();
   updateTrayMenu();
-  if (urlChanged) loadQbittorrent();
+  if (urlChanged || certChanged) loadQbittorrent();
   return { ok: true };
 });
 ipcMain.handle('open-settings', () => openSettings());
