@@ -254,6 +254,14 @@
         <label for="password">Password (optional)</label>
         <input type="password" id="password" placeholder="Leave blank if no auth" autocomplete="off" />
       </div>
+      <div class="toggle-row" style="margin-top:4px">
+        <span class="toggle-label">Allow untrusted HTTPS certificates</span>
+        <label class="toggle">
+          <input type="checkbox" id="allowUntrustedCerts" />
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="hint">Accept self-signed certificates (common for self-hosted / Docker qBittorrent over HTTPS).</div>
     </div>
   </div>
 
@@ -359,6 +367,7 @@
       document.getElementById('qbUrl').value = cfg.qbUrl || '';
       document.getElementById('username').value = cfg.username || '';
       document.getElementById('password').value = cfg.password || '';
+      document.getElementById('allowUntrustedCerts').checked = cfg.allowUntrustedCerts !== false;
       document.getElementById('runAtStartup').checked = !!cfg.runAtStartup;
       document.getElementById('startMinimized').checked = !!cfg.startMinimized;
       toggleStartMinimized();
@@ -405,6 +414,7 @@
         qbUrl: url,
         username: document.getElementById('username').value.trim(),
         password: document.getElementById('password').value,
+        allowUntrustedCerts: document.getElementById('allowUntrustedCerts').checked,
         runAtStartup: document.getElementById('runAtStartup').checked,
         startMinimized: document.getElementById('startMinimized').checked,
         minimizeToTray: document.getElementById('minimizeToTray').checked,

@@ -129,6 +129,7 @@ npm run build
 |---|---|
 | Web UI URL | Full URL to your qBittorrent Web UI including port |
 | Username / Password | Leave blank if authentication is disabled |
+| Allow untrusted HTTPS certificates | Accept self-signed certs (Web UI + API calls); on by default |
 | Run at Windows startup | Launch the app automatically on login (minimized to tray) |
 | Start minimized | Launch directly to the system tray |
 | Minimize to tray on close | Keep running in background when window is closed |
@@ -142,7 +143,10 @@ npm run build
 
 ## Changelog
 
-### v1.0.28 *(latest)*
+### v1.0.29 *(latest)*
+- Added **Allow untrusted HTTPS certificates** setting (Connection tab, on by default) — accepts self-signed certs for both the embedded Web UI **and** the app's own API calls (magnet/torrent add, completion notifications), so HTTPS with a self-signed cert works end-to-end
+
+### v1.0.28
 - Installer is now **one-click** for reliable auto-updates — "Restart to Install Update" works first try (one UAC prompt → installs → relaunches). Removes the choose-install-folder and license-agreement pages (the project is still GPL-3.0 — see [LICENSE](LICENSE))
 - **Settings window is now resizable** and remembers its size
 
