@@ -41,7 +41,11 @@ const DEFAULT_CONFIG = {
   registerMagnetHandler: true,
   allowUntrustedCerts: true,
   autoAddMagnets: false,
+  notificationsEnabled: true,
   completionNotifications: true,
+  addedNotifications: true,
+  updateNotifications: true,
+  trayHintNotifications: true,
   autoUpdate: true,
   magnetPopupTimeout: 12,
   pathMappings: [{ remote: '/downloads', local: 'Z:\\qbittorrent' }],
@@ -266,7 +270,7 @@ function createMainWindow() {
     if (!isQuitting && config.minimizeToTray) {
       e.preventDefault();
       mainWindow.hide();
-      showTrayNotification('qBittorrent Desktop is running in the tray.');
+      showTrayNotification('qBittorrent Desktop is running in the tray.', undefined, 'trayHintNotifications');
     } else {
       saveWindowBounds();
     }
@@ -360,12 +364,15 @@ function showMainWindow() {
 // carrying our AppUserModelID. In dev that shortcut points at the bare
 // electron.exe (no app path) and can hijack toast activation, so only ever
 // show notifications from the packaged app.
-function canNotify() {
-  return app.isPackaged && Notification.isSupported();
+function canNotify(category) {
+  if (!(app.isPackaged && Notification.isSupported())) return false;
+  if (config.notificationsEnabled === false) return false;
+  if (category && config[category] === false) return false;
+  return true;
 }
 
-function showTrayNotification(body, onClick) {
-  if (!canNotify()) return;
+function showTrayNotification(body, onClick, category) {
+  if (!canNotify(category)) return;
   const n = new Notification({ title: 'qBittorrent Desktop', body, icon: getIconPath() || undefined, silent: true });
   n.on('click', onClick || showMainWindow);
   n.show();
@@ -386,7 +393,7 @@ async function addMagnetFromClipboard() {
   }
   const ok = await addMagnetViaApi(text);
   if (ok) {
-    showTrayNotification('Magnet link added to qBittorrent.');
+    showTrayNotification('Magnet link added to qBittorrent.', undefined, 'addedNotifications');
     if (mainWindow && mainWindow.isVisible()) mainWindow.webContents.reload();
   } else {
     dialog.showMessageBox(mainWindow || undefined, {
@@ -413,7 +420,7 @@ async function addTorrentFromDialog() {
       return;
     }
   }
-  showTrayNotification(`Added ${result.filePaths.length} torrent(s) to qBittorrent.`);
+  showTrayNotification(`Added ${result.filePaths.length} torrent(s) to qBittorrent.`, undefined, 'addedNotifications');
   if (mainWindow && mainWindow.isVisible()) mainWindow.webContents.reload();
 }
 
@@ -422,7 +429,7 @@ async function handleFileArg(filePath) {
   filePath = filePath.trim().replace(/^"|"$/g, ''); // strip quotes Windows sometimes adds
   if (filePath.toLowerCase().endsWith('.torrent') && fs.existsSync(filePath)) {
     const ok = await addTorrentFileViaApi(filePath);
-    showTrayNotification(ok ? `Added: ${path.basename(filePath)}` : `Failed to add: ${path.basename(filePath)}`);
+    showTrayNotification(ok ? `Added: ${path.basename(filePath)}` : `Failed to add: ${path.basename(filePath)}`, undefined, 'addedNotifications');
     if (ok && mainWindow && mainWindow.isVisible()) mainWindow.webContents.reload();
   }
 }
@@ -438,7 +445,7 @@ async function handleDetectedMagnet(magnetUrl) {
   if (config.autoAddMagnets) {
     const ok = await addMagnetViaApi(magnetUrl);
     if (ok) {
-      showTrayNotification(`Magnet added: ${getMagnetName(magnetUrl)}`);
+      showTrayNotification(`Magnet added: ${getMagnetName(magnetUrl)}`, undefined, 'addedNotifications');
       if (mainWindow && mainWindow.isVisible()) mainWindow.webContents.reload();
     } else {
       dialog.showMessageBox(mainWindow || undefined, {
@@ -521,7 +528,7 @@ async function checkCompletions(initialLoad = false) {
         // incomplete → complete. Already-complete torrents (seeded on startup)
         // and torrents that merely re-check after a server restart are in
         // completedHashes, so they never re-notify.
-        if (!initialLoad && config.completionNotifications !== false && !completedHashes.has(t.hash) && prev !== undefined && prev < 1 && canNotify()) {
+        if (!initialLoad && !completedHashes.has(t.hash) && prev !== undefined && prev < 1 && canNotify('completionNotifications')) {
           const n = new Notification({
             title: 'Download Complete',
             body: t.name,
@@ -799,6 +806,7 @@ function setupAutoUpdater() {
     showTrayNotification(
       `Update ${info.version} is ready. Click to restart and install.`,
       () => { isQuitting = true; autoUpdater.quitAndInstall(true, true); },
+      'updateNotifications',
     );
   });
 
@@ -830,7 +838,7 @@ function checkForUpdatesManual() {
     .then((r) => {
       const latest = r && r.updateInfo && r.updateInfo.version;
       if (latest && latest !== app.getVersion()) {
-        showTrayNotification(`Downloading update ${latest}…`);
+        showTrayNotification(`Downloading update ${latest}…`, undefined, 'updateNotifications');
       } else {
         dialog.showMessageBox(mainWindow || undefined, {
           type: 'info', title: 'Up to Date',
@@ -876,6 +884,9 @@ app.on('open-url', async (event, url) => {
 });
 
 app.on('window-all-closed', () => { if (isQuitting) app.quit(); });
+// Windows shutdown/restart/logoff: quit cleanly instead of letting Windows
+// force-kill the process tree after the "preventing shutdown" grace period.
+app.on('session-end', () => { isQuitting = true; app.quit(); });
 app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) createMainWindow();
   else showMainWindow();

@@ -136,14 +136,28 @@ npm run build
 | Clipboard monitor | Watch clipboard for magnet links |
 | Register as default magnet link handler | Register the app as the OS handler for `magnet:` links |
 | Add magnets immediately | Add to qBittorrent directly, skipping the confirm popup |
-| Notify when a download finishes | Toggle desktop completion notifications |
 | Automatically download & install updates | Toggle auto-update (manual check still available) |
-| Magnet popup auto-dismiss | How long (seconds) the confirm popup stays before closing |
 | Path mappings | One or more remote→local pairs (e.g. `/downloads` → `Z:\qbittorrent`); the most specific match wins |
+
+### Notifications tab
+
+| Setting | Description |
+|---|---|
+| Enable notifications | Master switch — turns off all notifications below without losing your individual choices |
+| Download completed | Notify when a torrent finishes downloading |
+| Torrent / magnet added | Notify when a torrent or magnet link is added |
+| App update available / ready | Notify when an update is downloading or ready to install |
+| "Running in tray" hint on minimize | The one-time-per-minimize toast when the window is hidden to the tray |
+| Magnet popup auto-dismiss | How long (seconds) the confirm popup stays before closing |
 
 ## Changelog
 
-### v1.0.30 *(latest)*
+### v1.0.31 *(latest)*
+- New **Notifications** tab in Settings: a master on/off switch plus independent toggles for **download completed**, **torrent/magnet added**, **app update available/ready**, and the **"running in tray" hint** — silence exactly the notifications you don't want
+- Moved the **magnet popup auto-dismiss** setting into the new Notifications tab
+- App now quits cleanly on Windows shutdown/restart/logoff (`session-end`) instead of waiting to be force-terminated
+
+### v1.0.30
 - Updated to **Electron 43** (Chromium 150, Node 24) — latest release; smoke-tested. CI now builds on Node 22 (clears the engine-compatibility warnings). electron-builder/electron-updater already at latest.
 
 ### v1.0.29
