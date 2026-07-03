@@ -152,7 +152,10 @@ npm run build
 
 ## Changelog
 
-### v1.0.32 *(latest)*
+### v1.0.33 *(latest)*
+- Added diagnostic logging for the update flow (`update.log` in the app's userData folder) to track down reports of "Restart to Install" doing nothing on the first click but working on a second check. No behavior change — errors that were previously silently swallowed are now recorded instead.
+
+### v1.0.32
 - Auto-update now always asks before doing anything: a dialog confirms before **downloading** a new version, and another confirms before **restarting to install** it — no more silent background downloads or install-on-quit
 - Renamed the "Automatically download & install updates" setting to **Automatically check for updates**, since checking is now the only thing it silently automates
 - Declining an update won't nag you again for that version until you run "Check for Updates" manually

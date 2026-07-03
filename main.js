@@ -799,6 +799,16 @@ function applyMagnetHandler() {
 // Never download or install without asking first — checking for updates is the
 // only thing that can happen automatically; downloading and installing always
 // require an explicit click.
+
+// The "restart to install" step has silently no-op'd for some users (works on
+// a second attempt). We swallowed autoUpdater's 'error' event, so there was
+// no way to see why. Log every stage to a file so a real failure is captured
+// instead of guessed at.
+const updateLogPath = path.join(app.getPath('userData'), 'update.log');
+function logUpdate(line) {
+  try { fs.appendFileSync(updateLogPath, `[${new Date().toISOString()}] ${line}\n`); } catch (e) {}
+}
+
 function promptDownloadUpdate(info) {
   // Skip a version the user already said "not now" to, unless they explicitly
   // triggered this check themselves (a manual check should always respond).
@@ -813,8 +823,10 @@ function promptDownloadUpdate(info) {
     detail: 'Download and install it now?',
   }).then((r) => {
     if (r.response === 0) {
-      autoUpdater.downloadUpdate().catch(() => {});
+      logUpdate(`User confirmed download of ${info.version}. Calling downloadUpdate().`);
+      autoUpdater.downloadUpdate().catch((e) => logUpdate(`downloadUpdate() rejected: ${e && e.stack || e}`));
     } else {
+      logUpdate(`User declined download of ${info.version}.`);
       config.dismissedUpdateVersion = info.version;
       saveConfig(config);
     }
@@ -831,7 +843,17 @@ function promptRestartAndInstall() {
     message: 'The update has been downloaded.',
     detail: 'Restart qBittorrent Desktop now to install it?',
   }).then((r) => {
-    if (r.response === 0) { isQuitting = true; autoUpdater.quitAndInstall(true, true); }
+    if (r.response === 0) {
+      logUpdate('User confirmed restart & install. Setting isQuitting=true, calling quitAndInstall(true, true).');
+      isQuitting = true;
+      autoUpdater.quitAndInstall(true, true);
+      // If the install actually proceeds, the process exits shortly after this
+      // and the line below never runs. If it *does* run, quitAndInstall
+      // returned without tearing down the app — that's the bug, caught in the act.
+      setTimeout(() => logUpdate('Still running 5s after quitAndInstall() — it did not exit the app.'), 5000);
+    } else {
+      logUpdate('User chose "Later" at the restart prompt.');
+    }
   });
 }
 
@@ -840,10 +862,18 @@ function setupAutoUpdater() {
 
   autoUpdater.autoDownload = false;
   autoUpdater.autoInstallOnAppQuit = false;
+  logUpdate(`setupAutoUpdater: app v${app.getVersion()}, autoUpdate=${config.autoUpdate !== false}`);
 
-  autoUpdater.on('update-available', (info) => promptDownloadUpdate(info));
+  autoUpdater.on('checking-for-update', () => logUpdate('checking-for-update'));
+  autoUpdater.on('update-not-available', (info) => logUpdate(`update-not-available (latest is ${info && info.version})`));
+  autoUpdater.on('update-available', (info) => {
+    logUpdate(`update-available: ${info.version}`);
+    promptDownloadUpdate(info);
+  });
+  autoUpdater.on('download-progress', (p) => logUpdate(`download-progress: ${Math.round(p.percent)}%`));
 
   autoUpdater.on('update-downloaded', (info) => {
+    logUpdate(`update-downloaded: ${info.version} (${info.downloadedFile || 'no path reported'})`);
     updateDownloaded = true;
     updateTrayMenu();
     showTrayNotification(
@@ -853,14 +883,16 @@ function setupAutoUpdater() {
     );
   });
 
-  // Stay silent on errors — a failed update check shouldn't nag the user.
-  autoUpdater.on('error', () => {});
+  // Previously swallowed entirely, which hid the real cause of the "click does
+  // nothing, works on the 2nd try" reports. Now logged instead of silenced —
+  // the user still isn't nagged with a dialog for a background check failure.
+  autoUpdater.on('error', (e) => logUpdate(`error: ${e && e.stack || e}`));
 
   // Only check automatically when enabled; the tray "Check for Updates" still works.
-  if (config.autoUpdate !== false) autoUpdater.checkForUpdates().catch(() => {});
+  if (config.autoUpdate !== false) autoUpdater.checkForUpdates().catch((e) => logUpdate(`checkForUpdates() rejected: ${e && e.stack || e}`));
   // Re-check periodically while the app stays open (every 6 hours).
   setInterval(() => {
-    if (config.autoUpdate !== false) autoUpdater.checkForUpdates().catch(() => {});
+    if (config.autoUpdate !== false) autoUpdater.checkForUpdates().catch((e) => logUpdate(`checkForUpdates() rejected: ${e && e.stack || e}`));
   }, 6 * 60 * 60 * 1000);
 }
 
@@ -873,9 +905,11 @@ function checkForUpdatesManual() {
     return;
   }
   if (updateDownloaded) {
+    logUpdate('Manual check clicked while an update was already downloaded — going straight to restart prompt.');
     promptRestartAndInstall();
     return;
   }
+  logUpdate('Manual check for updates triggered.');
   manualUpdateCheck = true;
   autoUpdater.checkForUpdates()
     .then((r) => {
@@ -888,7 +922,8 @@ function checkForUpdatesManual() {
       }
       // Otherwise the 'update-available' handler above shows the prompt.
     })
-    .catch(() => {
+    .catch((e) => {
+      logUpdate(`Manual checkForUpdates() rejected: ${e && e.stack || e}`);
       dialog.showMessageBox(mainWindow || undefined, {
         type: 'error', title: 'Update Check Failed',
         message: 'Could not check for updates. Please try again later.',
