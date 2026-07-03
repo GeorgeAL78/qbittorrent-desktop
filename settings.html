@@ -235,6 +235,7 @@
   <div class="tabs">
     <button type="button" class="tab active" data-tab="connection">Connection</button>
     <button type="button" class="tab" data-tab="behaviour">Behaviour</button>
+    <button type="button" class="tab" data-tab="notifications">Notifications</button>
     <button type="button" class="tab" data-tab="paths">Paths</button>
   </div>
 
@@ -310,20 +311,58 @@
         </label>
       </div>
       <div class="toggle-row" style="margin-top:12px">
-        <span class="toggle-label">Notify when a download finishes</span>
-        <label class="toggle">
-          <input type="checkbox" id="completionNotifications" />
-          <span class="slider"></span>
-        </label>
-      </div>
-      <div class="toggle-row" style="margin-top:12px">
         <span class="toggle-label">Automatically download &amp; install updates</span>
         <label class="toggle">
           <input type="checkbox" id="autoUpdate" />
           <span class="slider"></span>
         </label>
       </div>
-      <div class="field" style="margin-top:14px">
+    </div>
+  </div>
+
+  <div class="tab-panel" id="tab-notifications">
+    <div class="section">
+      <div class="toggle-row">
+        <span class="toggle-label">Enable notifications</span>
+        <label class="toggle">
+          <input type="checkbox" id="notificationsEnabled" />
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="hint">Master switch. Turn off to silence all notifications below, without losing your individual choices.</div>
+    </div>
+    <div class="section" id="notificationSubsection">
+      <div class="toggle-row">
+        <span class="toggle-label">Download completed</span>
+        <label class="toggle">
+          <input type="checkbox" id="completionNotifications" />
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row" style="margin-top:12px">
+        <span class="toggle-label">Torrent / magnet added</span>
+        <label class="toggle">
+          <input type="checkbox" id="addedNotifications" />
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row" style="margin-top:12px">
+        <span class="toggle-label">App update available / ready</span>
+        <label class="toggle">
+          <input type="checkbox" id="updateNotifications" />
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row" style="margin-top:12px">
+        <span class="toggle-label">"Running in tray" hint on minimize</span>
+        <label class="toggle">
+          <input type="checkbox" id="trayHintNotifications" />
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+    <div class="section">
+      <div class="field">
         <label for="magnetPopupTimeout">Magnet popup auto-dismiss (seconds)</label>
         <input type="number" id="magnetPopupTimeout" min="3" max="120" style="width:100px" />
       </div>
@@ -375,7 +414,12 @@
       document.getElementById('clipboardMonitor').checked = cfg.clipboardMonitor !== false;
       document.getElementById('registerMagnetHandler').checked = cfg.registerMagnetHandler !== false;
       document.getElementById('autoAddMagnets').checked = !!cfg.autoAddMagnets;
+      document.getElementById('notificationsEnabled').checked = cfg.notificationsEnabled !== false;
       document.getElementById('completionNotifications').checked = cfg.completionNotifications !== false;
+      document.getElementById('addedNotifications').checked = cfg.addedNotifications !== false;
+      document.getElementById('updateNotifications').checked = cfg.updateNotifications !== false;
+      document.getElementById('trayHintNotifications').checked = cfg.trayHintNotifications !== false;
+      toggleNotificationsEnabled();
       document.getElementById('autoUpdate').checked = cfg.autoUpdate !== false;
       document.getElementById('magnetPopupTimeout').value = Number(cfg.magnetPopupTimeout) > 0 ? Number(cfg.magnetPopupTimeout) : 12;
 
@@ -421,7 +465,11 @@
         clipboardMonitor: document.getElementById('clipboardMonitor').checked,
         registerMagnetHandler: document.getElementById('registerMagnetHandler').checked,
         autoAddMagnets: document.getElementById('autoAddMagnets').checked,
+        notificationsEnabled: document.getElementById('notificationsEnabled').checked,
         completionNotifications: document.getElementById('completionNotifications').checked,
+        addedNotifications: document.getElementById('addedNotifications').checked,
+        updateNotifications: document.getElementById('updateNotifications').checked,
+        trayHintNotifications: document.getElementById('trayHintNotifications').checked,
         autoUpdate: document.getElementById('autoUpdate').checked,
         magnetPopupTimeout: Math.min(120, Math.max(3, parseInt(document.getElementById('magnetPopupTimeout').value, 10) || 12)),
         pathMappings: Array.from(document.querySelectorAll('#pathMappings .mapping-row')).map((r) => ({
@@ -453,6 +501,14 @@
       if (runAtStartup) document.getElementById('startMinimized').checked = false;
     }
     document.getElementById('runAtStartup').addEventListener('change', toggleStartMinimized);
+
+    function toggleNotificationsEnabled() {
+      const enabled = document.getElementById('notificationsEnabled').checked;
+      const section = document.getElementById('notificationSubsection');
+      section.style.opacity = enabled ? '1' : '0.4';
+      section.style.pointerEvents = enabled ? '' : 'none';
+    }
+    document.getElementById('notificationsEnabled').addEventListener('change', toggleNotificationsEnabled);
 
     function showStatus(msg, isError) {
       const el = document.getElementById('status');
