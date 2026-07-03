@@ -45,7 +45,7 @@ A Windows 11 desktop client for qBittorrent running on a remote machine or Docke
 - **Magnet link handler** — register as the default `magnet:` handler so clicking a magnet link in any browser opens the app with an add-confirmation popup
 - **Clipboard monitor** — automatically detects magnet links copied to clipboard and offers to add them
 - **System tray** — minimize to tray, optionally start minimized, or launch automatically at Windows startup
-- **Automatic updates** — the installed app checks GitHub Releases on launch and updates itself in the background
+- **Automatic updates** — the installed app checks GitHub Releases on launch and periodically, and asks for permission before downloading or installing anything
 - **Completion notifications** — desktop popup when a torrent finishes downloading
 - **Double-click to open** — double-click a torrent in the transfer list to open its download folder, or double-click a file/folder in the Content tab to open it directly
 - **Path mapping** — maps remote server paths to local mounted paths (e.g. `/downloads` → `Z:\qbittorrent`)
@@ -85,7 +85,7 @@ With *Monitor clipboard for magnet links* enabled, the app watches your clipboar
 Closing the window keeps the app running in the system tray (toggleable). The tray menu lets you re-open the app, add a magnet from the clipboard, add a `.torrent` file, open Settings, check for updates, or open the Web UI in your browser. It can also **start minimized** and **launch automatically at Windows login** (minimized to tray) so it's always running in the background.
 
 ### Automatic updates
-The installed app checks GitHub Releases on launch and periodically afterward, downloads new versions in the background, and surfaces a **⟳ Restart to Install Update** entry in the tray when one is ready. Updates install silently and the app relaunches itself. (The portable build doesn't self-update — only the installer version does.)
+The installed app checks GitHub Releases on launch and every 6 hours afterward (toggle this in Settings). Nothing downloads or installs without asking first: when a new version is found, a dialog asks whether to download and install it; once downloaded, another dialog (and a tray/notification prompt) asks to restart and install. Declining a version won't ask again for that same version until you run "Check for Updates" manually. (The portable build doesn't self-update — only the installer version does.)
 
 ### Open files & folders locally (path mapping)
 qBittorrent refers to files using **its own** paths (e.g. `/downloads` inside a Docker container), which don't exist as-is on your Windows PC. **Path mapping** bridges that: you tell the app the remote base path and where it's mounted locally (e.g. `/downloads` → `Z:\qbittorrent`). Once set:
@@ -136,7 +136,7 @@ npm run build
 | Clipboard monitor | Watch clipboard for magnet links |
 | Register as default magnet link handler | Register the app as the OS handler for `magnet:` links |
 | Add magnets immediately | Add to qBittorrent directly, skipping the confirm popup |
-| Automatically download & install updates | Toggle auto-update (manual check still available) |
+| Automatically check for updates | Toggle background checking (on launch + every 6h); downloading/installing always asks first regardless |
 | Path mappings | One or more remote→local pairs (e.g. `/downloads` → `Z:\qbittorrent`); the most specific match wins |
 
 ### Notifications tab
@@ -152,7 +152,12 @@ npm run build
 
 ## Changelog
 
-### v1.0.31 *(latest)*
+### v1.0.32 *(latest)*
+- Auto-update now always asks before doing anything: a dialog confirms before **downloading** a new version, and another confirms before **restarting to install** it — no more silent background downloads or install-on-quit
+- Renamed the "Automatically download & install updates" setting to **Automatically check for updates**, since checking is now the only thing it silently automates
+- Declining an update won't nag you again for that version until you run "Check for Updates" manually
+
+### v1.0.31
 - New **Notifications** tab in Settings: a master on/off switch plus independent toggles for **download completed**, **torrent/magnet added**, **app update available/ready**, and the **"running in tray" hint** — silence exactly the notifications you don't want
 - Moved the **magnet popup auto-dismiss** setting into the new Notifications tab
 - App now quits cleanly on Windows shutdown/restart/logoff (`session-end`) instead of waiting to be force-terminated
