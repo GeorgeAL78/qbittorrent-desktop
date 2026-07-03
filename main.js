@@ -47,6 +47,7 @@ const DEFAULT_CONFIG = {
   updateNotifications: true,
   trayHintNotifications: true,
   autoUpdate: true,
+  dismissedUpdateVersion: '',
   magnetPopupTimeout: 12,
   pathMappings: [{ remote: '/downloads', local: 'Z:\\qbittorrent' }],
   windowBounds: { width: 1280, height: 800 },
@@ -227,6 +228,7 @@ let clipboardInterval = null;
 let lastClipboardText = '';
 let isQuitting = false;
 let updateDownloaded = false;
+let manualUpdateCheck = false;
 let dockerVersion = null; // version of the qBittorrent Docker image, if it advertises one
 
 function getMagnetName(magnetUrl) {
@@ -794,18 +796,59 @@ function applyMagnetHandler() {
 }
 
 // ── Auto-update (electron-updater + GitHub Releases) ─────────────────────────
+// Never download or install without asking first — checking for updates is the
+// only thing that can happen automatically; downloading and installing always
+// require an explicit click.
+function promptDownloadUpdate(info) {
+  // Skip a version the user already said "not now" to, unless they explicitly
+  // triggered this check themselves (a manual check should always respond).
+  if (!manualUpdateCheck && info.version === config.dismissedUpdateVersion) return;
+  dialog.showMessageBox(mainWindow || undefined, {
+    type: 'info',
+    title: 'Update Available',
+    buttons: ['Download && Install', 'Not Now'],
+    defaultId: 0,
+    cancelId: 1,
+    message: `Version ${info.version} is available (you're on v${app.getVersion()}).`,
+    detail: 'Download and install it now?',
+  }).then((r) => {
+    if (r.response === 0) {
+      autoUpdater.downloadUpdate().catch(() => {});
+    } else {
+      config.dismissedUpdateVersion = info.version;
+      saveConfig(config);
+    }
+  });
+}
+
+function promptRestartAndInstall() {
+  dialog.showMessageBox(mainWindow || undefined, {
+    type: 'info',
+    title: 'Update Ready',
+    buttons: ['Restart Now', 'Later'],
+    defaultId: 0,
+    cancelId: 1,
+    message: 'The update has been downloaded.',
+    detail: 'Restart qBittorrent Desktop now to install it?',
+  }).then((r) => {
+    if (r.response === 0) { isQuitting = true; autoUpdater.quitAndInstall(true, true); }
+  });
+}
+
 function setupAutoUpdater() {
   if (!app.isPackaged) return; // updater needs a packaged build + published latest.yml
 
-  autoUpdater.autoDownload = config.autoUpdate !== false;
-  autoUpdater.autoInstallOnAppQuit = config.autoUpdate !== false;
+  autoUpdater.autoDownload = false;
+  autoUpdater.autoInstallOnAppQuit = false;
+
+  autoUpdater.on('update-available', (info) => promptDownloadUpdate(info));
 
   autoUpdater.on('update-downloaded', (info) => {
     updateDownloaded = true;
     updateTrayMenu();
     showTrayNotification(
       `Update ${info.version} is ready. Click to restart and install.`,
-      () => { isQuitting = true; autoUpdater.quitAndInstall(true, true); },
+      () => promptRestartAndInstall(),
       'updateNotifications',
     );
   });
@@ -830,28 +873,28 @@ function checkForUpdatesManual() {
     return;
   }
   if (updateDownloaded) {
-    isQuitting = true;
-    autoUpdater.quitAndInstall(true, true);
+    promptRestartAndInstall();
     return;
   }
+  manualUpdateCheck = true;
   autoUpdater.checkForUpdates()
     .then((r) => {
       const latest = r && r.updateInfo && r.updateInfo.version;
-      if (latest && latest !== app.getVersion()) {
-        showTrayNotification(`Downloading update ${latest}…`, undefined, 'updateNotifications');
-      } else {
+      if (!latest || latest === app.getVersion()) {
         dialog.showMessageBox(mainWindow || undefined, {
           type: 'info', title: 'Up to Date',
           message: `You're on the latest version (v${app.getVersion()}).`,
         });
       }
+      // Otherwise the 'update-available' handler above shows the prompt.
     })
     .catch(() => {
       dialog.showMessageBox(mainWindow || undefined, {
         type: 'error', title: 'Update Check Failed',
         message: 'Could not check for updates. Please try again later.',
       });
-    });
+    })
+    .finally(() => { manualUpdateCheck = false; });
 }
 
 // ── App lifecycle ────────────────────────────────────────────────────────────
