@@ -339,7 +339,7 @@ function updateTrayMenu() {
   tray.setContextMenu(Menu.buildFromTemplate([
     { label: `qBittorrent Desktop v${app.getVersion()}`, enabled: false },
     ...(updateDownloaded
-      ? [{ label: '⟳ Restart to Install Update', click: () => { isQuitting = true; autoUpdater.quitAndInstall(true, true); } }]
+      ? [{ label: '⟳ Restart to Install Update', click: restartAndInstall }]
       : []),
     { type: 'separator' },
     { label: 'Open qBittorrent Desktop', click: showMainWindow },
@@ -797,8 +797,9 @@ function applyMagnetHandler() {
 
 // ── Auto-update (electron-updater + GitHub Releases) ─────────────────────────
 // Never download or install without asking first — checking for updates is the
-// only thing that can happen automatically; downloading and installing always
-// require an explicit click.
+// only thing that can happen automatically. But one "Download && Install" click
+// is the only permission needed; once given, the download and the eventual
+// restart/install proceed on their own without a second confirmation.
 
 // The "restart to install" step has silently no-op'd for some users (works on
 // a second attempt). We swallowed autoUpdater's 'error' event, so there was
@@ -833,28 +834,14 @@ function promptDownloadUpdate(info) {
   });
 }
 
-function promptRestartAndInstall() {
-  dialog.showMessageBox(mainWindow || undefined, {
-    type: 'info',
-    title: 'Update Ready',
-    buttons: ['Restart Now', 'Later'],
-    defaultId: 0,
-    cancelId: 1,
-    message: 'The update has been downloaded.',
-    detail: 'Restart qBittorrent Desktop now to install it?',
-  }).then((r) => {
-    if (r.response === 0) {
-      logUpdate('User confirmed restart & install. Setting isQuitting=true, calling quitAndInstall(true, true).');
-      isQuitting = true;
-      autoUpdater.quitAndInstall(true, true);
-      // If the install actually proceeds, the process exits shortly after this
-      // and the line below never runs. If it *does* run, quitAndInstall
-      // returned without tearing down the app — that's the bug, caught in the act.
-      setTimeout(() => logUpdate('Still running 5s after quitAndInstall() — it did not exit the app.'), 5000);
-    } else {
-      logUpdate('User chose "Later" at the restart prompt.');
-    }
-  });
+function restartAndInstall() {
+  logUpdate('Restarting to install update. Setting isQuitting=true, calling quitAndInstall(true, true).');
+  isQuitting = true;
+  autoUpdater.quitAndInstall(true, true);
+  // If the install actually proceeds, the process exits shortly after this
+  // and the line below never runs. If it *does* run, quitAndInstall
+  // returned without tearing down the app — that's the bug, caught in the act.
+  setTimeout(() => logUpdate('Still running 5s after quitAndInstall() — it did not exit the app.'), 5000);
 }
 
 function setupAutoUpdater() {
@@ -876,11 +863,10 @@ function setupAutoUpdater() {
     logUpdate(`update-downloaded: ${info.version} (${info.downloadedFile || 'no path reported'})`);
     updateDownloaded = true;
     updateTrayMenu();
-    showTrayNotification(
-      `Update ${info.version} is ready. Click to restart and install.`,
-      () => promptRestartAndInstall(),
-      'updateNotifications',
-    );
+    // Permission was already given at the "Download && Install" prompt — no
+    // second confirmation, just a heads-up before restarting.
+    showTrayNotification(`Installing update ${info.version}, restarting…`, undefined, 'updateNotifications');
+    restartAndInstall();
   });
 
   // Previously swallowed entirely, which hid the real cause of the "click does
@@ -905,8 +891,8 @@ function checkForUpdatesManual() {
     return;
   }
   if (updateDownloaded) {
-    logUpdate('Manual check clicked while an update was already downloaded — going straight to restart prompt.');
-    promptRestartAndInstall();
+    logUpdate('Manual check clicked while an update was already downloaded — restarting to install directly.');
+    restartAndInstall();
     return;
   }
   logUpdate('Manual check for updates triggered.');
