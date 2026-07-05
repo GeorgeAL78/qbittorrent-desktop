@@ -50,12 +50,24 @@ README.md from live `process.versions` + lockfile — runs automatically on
   notification fires un-packaged. That shortcut then hijacks toast-click activation
   for the real installed app (same AUMID). All `Notification` calls are gated on
   `app.isPackaged` (see `canNotify()` in main.js) — do not remove this gate.
-- **NSIS config must stay `oneClick: true`.** Switching to the assisted installer
-  (`oneClick: false`) + silent `quitAndInstall(true, true)` was tried and is unreliable
-  (assisted + silent + per-machine elevation doesn't combine well) — this caused the
-  "Restart to Install does nothing" bug. `oneClick: true` is incompatible with
+- **NSIS config must stay `oneClick: true`.** `oneClick: true` is incompatible with
   `allowToChangeInstallationDirectory` and a NSIS `license` page — don't add those back
   without re-testing the update flow end-to-end.
+- **The "click does nothing, works on retry" update reports were never actually a
+  reliability bug.** Originally (v1.0.28) misdiagnosed as `oneClick:false` + silent
+  install being unreliable, and switched to `oneClick: true` — that didn't fully
+  explain later recurrences on v1.0.30→31→32. Added `update.log` diagnostics (v1.0.33,
+  written to `app.getPath('userData')`) and confirmed every click was actually landing
+  fine on the first try — the real complaint was just too many total clicks (the old
+  design needed 4: check → confirm download → notice → confirm restart). Fixed properly
+  in v1.0.35 by collapsing to one confirmation ("Download && Install"); the restart/
+  install now proceeds automatically once downloaded, no second prompt. Lesson: don't
+  assume a flow-friction report is a reliability bug — ask directly before building
+  diagnostic tooling around it (see memory `[[feedback-clarify-bug-vs-ux-before-diagnosing]]`).
+  `update.log` is still there and worth checking first if this ever resurfaces for real
+  — I have direct filesystem access to the user's machine and can read it myself
+  (`%APPDATA%\@georgeal78\qbittorrent-desktop\update.log`), no need to ask the user to
+  relay it.
 - **`js-yaml` is pinned via `overrides` to `^4.3.0`** — electron-updater/builder require
   `^4`; don't let a bump go to 5.x without checking compatibility first.
 - Deprecated transitive deps (`glob@7`, `rimraf@2`, `boolean@3`, `inflight`,
@@ -67,9 +79,17 @@ README.md from live `process.versions` + lockfile — runs automatically on
 ## Auto-update behavior (for reference)
 
 `setupAutoUpdater()` in main.js: checks once on `app.whenReady()`, then every 6 hours
-via `setInterval`, gated on `config.autoUpdate !== false`. Manual check always available
-via tray menu and the injected qBittorrent "Desktop" menu. Both are no-ops in dev
+via `setInterval`, gated on `config.autoUpdate !== false` ("Automatically check for
+updates" in Settings — controls checking only). Manual check always available via
+tray menu and the injected qBittorrent "Desktop" menu. Both are no-ops in dev
 (`!app.isPackaged` guard).
+
+Download/install never happens without asking, but it's a **single** confirmation:
+`update-available` → `promptDownloadUpdate()` shows one dialog ("Download && Install" /
+"Not Now"). Saying yes downloads, and `update-downloaded` goes straight to
+`restartAndInstall()` — no second dialog. Declining is remembered per-version
+(`config.dismissedUpdateVersion`) so it won't re-nag for the same version except on an
+explicit manual check (`manualUpdateCheck` flag bypasses the dismissal).
 
 ## Cross-repo coordination
 
