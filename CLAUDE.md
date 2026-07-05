@@ -3,7 +3,7 @@
 Electron desktop wrapper for qBittorrent's Web UI, for Windows 11.
 Repo: `GeorgeAL78/qbittorrent-desktop`. Published to GitHub Releases +
 GitHub Packages npm registry `@georgeal78/qbittorrent-desktop`.
-Sole maintainer: the user (gjergjikoci@gmail.com).
+Sole maintainer: the user.
 
 ## Standing rules (do not relitigate)
 
