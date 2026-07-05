@@ -85,7 +85,7 @@ With *Monitor clipboard for magnet links* enabled, the app watches your clipboar
 Closing the window keeps the app running in the system tray (toggleable). The tray menu lets you re-open the app, add a magnet from the clipboard, add a `.torrent` file, open Settings, check for updates, or open the Web UI in your browser. It can also **start minimized** and **launch automatically at Windows login** (minimized to tray) so it's always running in the background.
 
 ### Automatic updates
-The installed app checks GitHub Releases on launch and every 6 hours afterward (toggle this in Settings). Nothing downloads or installs without asking first: when a new version is found, a dialog asks whether to download and install it; once downloaded, another dialog (and a tray/notification prompt) asks to restart and install. Declining a version won't ask again for that same version until you run "Check for Updates" manually. (The portable build doesn't self-update — only the installer version does.)
+The installed app checks GitHub Releases on launch and every 6 hours afterward (toggle this in Settings). Nothing downloads without asking first: when a new version is found, a dialog asks whether to download and install it. That one confirmation covers the whole process — once you say yes, it downloads and then restarts/installs on its own, no second prompt. Declining a version won't ask again for that same version until you run "Check for Updates" manually. (The portable build doesn't self-update — only the installer version does.)
 
 ### Open files & folders locally (path mapping)
 qBittorrent refers to files using **its own** paths (e.g. `/downloads` inside a Docker container), which don't exist as-is on your Windows PC. **Path mapping** bridges that: you tell the app the remote base path and where it's mounted locally (e.g. `/downloads` → `Z:\qbittorrent`). Once set:
@@ -152,7 +152,10 @@ npm run build
 
 ## Changelog
 
-### v1.0.34 *(latest)*
+### v1.0.35 *(latest)*
+- Update flow is now just **2 clicks**: "Check for Updates" → "Download && Install". Removed the second "restart now?" confirmation — once you approve the download, it installs and restarts automatically when ready.
+
+### v1.0.34
 - No functional changes — version-only bump to trigger an update cycle on the already-logged v1.0.33, so the "restart to install does nothing the first time" issue can actually be captured in `update.log`.
 
 ### v1.0.33
