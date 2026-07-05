@@ -152,7 +152,10 @@ npm run build
 
 ## Changelog
 
-### v1.0.33 *(latest)*
+### v1.0.34 *(latest)*
+- No functional changes — version-only bump to trigger an update cycle on the already-logged v1.0.33, so the "restart to install does nothing the first time" issue can actually be captured in `update.log`.
+
+### v1.0.33
 - Added diagnostic logging for the update flow (`update.log` in the app's userData folder) to track down reports of "Restart to Install" doing nothing on the first click but working on a second check. No behavior change — errors that were previously silently swallowed are now recorded instead.
 
 ### v1.0.32
