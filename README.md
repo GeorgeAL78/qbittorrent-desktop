@@ -152,7 +152,10 @@ npm run build
 
 ## Changelog
 
-### v1.0.35 *(latest)*
+### v1.0.36 *(latest)*
+- No functional changes — version-only bump to test the new 2-click update flow shipped in v1.0.35.
+
+### v1.0.35
 - Update flow is now just **2 clicks**: "Check for Updates" → "Download && Install". Removed the second "restart now?" confirmation — once you approve the download, it installs and restarts automatically when ready.
 
 ### v1.0.34
