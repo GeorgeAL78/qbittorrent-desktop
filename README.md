@@ -154,7 +154,10 @@ npm run build
 
 ## Changelog
 
-### v1.0.38 *(latest)*
+### v1.0.39 *(latest)*
+- Security: bumped `js-yaml` to the patched 4.3.1 (CVE-2026-59870, quadratic CPU consumption — the only advisory that reached shipped code, via electron-updater) and cleared 9 build-only `undici`/`fast-uri` advisories. Audit clean.
+
+### v1.0.38
 - **Portable build no longer offers updates it can't perform** — "Check for Updates" is hidden from the tray menu, and choosing it from the Desktop menu now explains the limitation and links to the Releases page instead of silently doing nothing
 - `update.log` is now capped (~64 KB) instead of growing indefinitely
 - Added a syntax-check step to CI so a parse error fails in seconds rather than after a full build
