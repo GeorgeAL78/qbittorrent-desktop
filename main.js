@@ -348,7 +348,8 @@ function updateTrayMenu() {
     { label: 'Add .torrent File…', click: addTorrentFromDialog },
     { type: 'separator' },
     { label: 'Settings', click: openSettings },
-    { label: 'Check for Updates', click: checkForUpdatesManual },
+    // Portable builds can't self-update, so don't offer an action that can't work.
+    ...(isPortable ? [] : [{ label: 'Check for Updates', click: checkForUpdatesManual }]),
     { label: 'Open in Browser', click: () => shell.openExternal(config.qbUrl) },
     { type: 'separator' },
     { label: 'Quit', click: () => { isQuitting = true; app.quit(); } },
@@ -806,8 +807,25 @@ function applyMagnetHandler() {
 // no way to see why. Log every stage to a file so a real failure is captured
 // instead of guessed at.
 const updateLogPath = path.join(app.getPath('userData'), 'update.log');
+const UPDATE_LOG_MAX_BYTES = 64 * 1024;
 function logUpdate(line) {
-  try { fs.appendFileSync(updateLogPath, `[${new Date().toISOString()}] ${line}\n`); } catch (e) {}
+  try {
+    // Appended to on every check (startup + every 6h), so keep it bounded.
+    if (fs.existsSync(updateLogPath) && fs.statSync(updateLogPath).size > UPDATE_LOG_MAX_BYTES) {
+      const kept = fs.readFileSync(updateLogPath, 'utf8').slice(-UPDATE_LOG_MAX_BYTES / 2);
+      fs.writeFileSync(updateLogPath, `[log truncated]\n${kept}`);
+    }
+    fs.appendFileSync(updateLogPath, `[${new Date().toISOString()}] ${line}\n`);
+  } catch (e) {}
+}
+
+// electron-builder sets this only for the portable target. The portable build
+// is a single self-contained exe with no install dir or uninstaller, so
+// electron-updater's NsisUpdater has nothing to hand off to — updates can
+// never apply. Detect it so we don't offer an action that silently no-ops.
+const isPortable = !!process.env.PORTABLE_EXECUTABLE_DIR;
+function canSelfUpdate() {
+  return app.isPackaged && !isPortable;
 }
 
 function promptDownloadUpdate(info) {
@@ -845,7 +863,9 @@ function restartAndInstall() {
 }
 
 function setupAutoUpdater() {
-  if (!app.isPackaged) return; // updater needs a packaged build + published latest.yml
+  // Needs a packaged, installed build + published latest.yml. Portable can't
+  // apply an update at all, so don't even check.
+  if (!canSelfUpdate()) return;
 
   autoUpdater.autoDownload = false;
   autoUpdater.autoInstallOnAppQuit = false;
@@ -883,6 +903,19 @@ function setupAutoUpdater() {
 }
 
 function checkForUpdatesManual() {
+  if (isPortable) {
+    dialog.showMessageBox(mainWindow || undefined, {
+      type: 'info', title: 'Updates',
+      message: "The portable build can't update itself.",
+      detail: 'Download the latest version manually from the Releases page, or use the installer version for automatic updates.',
+      buttons: ['Open Releases Page', 'Close'],
+      defaultId: 0,
+      cancelId: 1,
+    }).then((r) => {
+      if (r.response === 0) shell.openExternal('https://github.com/GeorgeAL78/qbittorrent-desktop/releases/latest');
+    });
+    return;
+  }
   if (!app.isPackaged) {
     dialog.showMessageBox(mainWindow || undefined, {
       type: 'info', title: 'Updates',

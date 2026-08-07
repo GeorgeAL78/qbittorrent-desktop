@@ -1,6 +1,6 @@
 {
   "name": "@georgeal78/qbittorrent-desktop",
-  "version": "1.0.37",
+  "version": "1.0.38",
   "description": "qBittorrent Desktop Client for Windows 11",
   "main": "main.js",
   "author": "qBittorrent Desktop",
@@ -16,6 +16,7 @@
     "start": "electron .",
     "build": "electron-builder --win --x64",
     "build:portable": "electron-builder --win portable --x64",
+    "check": "node scripts/check-syntax.js",
     "update-components": "node scripts/update-components.js",
     "version": "node scripts/update-components.js && git add README.md"
   },

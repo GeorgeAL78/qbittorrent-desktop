@@ -27,6 +27,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Syntax check
+        # Fails in seconds on a parse error instead of after a ~2 min build,
+        # and stops a broken tag from ever publishing.
+        run: npm run check
+
       - name: Ensure release exists (avoids electron-builder create race)
         # electron-builder uploads multiple artifacts in parallel; each one
         # does check-then-create on the release, which can race and 422 with

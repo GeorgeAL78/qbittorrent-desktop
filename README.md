@@ -85,7 +85,9 @@ With *Monitor clipboard for magnet links* enabled, the app watches your clipboar
 Closing the window keeps the app running in the system tray (toggleable). The tray menu lets you re-open the app, add a magnet from the clipboard, add a `.torrent` file, open Settings, check for updates, or open the Web UI in your browser. It can also **start minimized** and **launch automatically at Windows login** (minimized to tray) so it's always running in the background.
 
 ### Automatic updates
-The installed app checks GitHub Releases on launch and every 6 hours afterward (toggle this in Settings). Nothing downloads without asking first: when a new version is found, a dialog asks whether to download and install it. That one confirmation covers the whole process — once you say yes, it downloads and then restarts/installs on its own, no second prompt. Declining a version won't ask again for that same version until you run "Check for Updates" manually. (The portable build doesn't self-update — only the installer version does.)
+The installed app checks GitHub Releases on launch and every 6 hours afterward (toggle this in Settings). Nothing downloads without asking first: when a new version is found, a dialog asks whether to download and install it. That one confirmation covers the whole process — once you say yes, it downloads and then restarts/installs on its own, no second prompt. Declining a version won't ask again for that same version until you run "Check for Updates" manually.
+
+The **portable build can't self-update** — it's a single self-contained exe with no install directory for the updater to replace. It doesn't check for updates, and the tray's "Check for Updates" item is hidden there; grab new versions from the [Releases page](https://github.com/GeorgeAL78/qbittorrent-desktop/releases/latest), or use the installer for automatic updates.
 
 ### Open files & folders locally (path mapping)
 qBittorrent refers to files using **its own** paths (e.g. `/downloads` inside a Docker container), which don't exist as-is on your Windows PC. **Path mapping** bridges that: you tell the app the remote base path and where it's mounted locally (e.g. `/downloads` → `Z:\qbittorrent`). Once set:
@@ -152,7 +154,12 @@ npm run build
 
 ## Changelog
 
-### v1.0.37 *(latest)*
+### v1.0.38 *(latest)*
+- **Portable build no longer offers updates it can't perform** — "Check for Updates" is hidden from the tray menu, and choosing it from the Desktop menu now explains the limitation and links to the Releases page instead of silently doing nothing
+- `update.log` is now capped (~64 KB) instead of growing indefinitely
+- Added a syntax-check step to CI so a parse error fails in seconds rather than after a full build
+
+### v1.0.37
 - Updated to **Electron 43.2.0** (Chromium 150.0.7871.129, Node 24.18.0) — electron-builder/electron-updater already at latest. Also cleared 3 transitive-dependency vulnerabilities (`brace-expansion`, `fast-uri`, `tar` — all build-tool-only, non-breaking `npm audit fix` bumps).
 
 ### v1.0.36
