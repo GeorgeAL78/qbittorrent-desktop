@@ -1,4 +1,8 @@
-# qBittorrent Desktop
+<p align="center">
+  <img src="assets/icon.png" width="120" alt="qBittorrent Desktop logo">
+</p>
+
+<h1 align="center">qBittorrent Desktop</h1>
 
 <p align="center">
   <a href="https://github.com/GeorgeAL78/qbittorrent-desktop/actions/workflows/release.yml"><img src="https://img.shields.io/github/actions/workflow/status/GeorgeAL78/qbittorrent-desktop/release.yml?label=release%20build" alt="Release build"></a>
@@ -154,7 +158,10 @@ npm run build
 
 ## Changelog
 
-### v1.0.39 *(latest)*
+### v1.0.40 *(latest)*
+- New **app icon**, shared with [pia-qbittorrent-docker](https://github.com/GeorgeAL78/pia-qbittorrent-docker) so the two projects match. Applies to the window, tray, notifications, installer and `.torrent` file association.
+
+### v1.0.39
 - Security: bumped `js-yaml` to the patched 4.3.1 (CVE-2026-59870, quadratic CPU consumption — the only advisory that reached shipped code, via electron-updater) and cleared 9 build-only `undici`/`fast-uri` advisories. Audit clean.
 
 ### v1.0.38
