@@ -1,6 +1,6 @@
 {
   "name": "@georgeal78/qbittorrent-desktop",
-  "version": "1.0.41",
+  "version": "1.0.42",
   "description": "qBittorrent Desktop Client for Windows 11",
   "main": "main.js",
   "author": "qBittorrent Desktop",
