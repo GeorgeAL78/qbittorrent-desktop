@@ -161,6 +161,7 @@ npm run build
 
 ### v1.0.43 *(latest)*
 - Opening a **.torrent file** now shows the same add-confirmation popup as magnet links, instead of adding it instantly. New **Add .torrent files immediately** toggle (Settings → Behaviour) restores the old instant add.
+- Security: `js-yaml` 4.3.1 → 4.3.2 (merge-key CPU exhaustion advisory; ships in the app via electron-updater). Audit clean.
 
 ### v1.0.42
 - The title bar now picks up a **new Docker container version live** — within ~30s of the container coming back, no app restart needed. It also drops the Docker suffix if you point the app at a non-Docker qBittorrent.
