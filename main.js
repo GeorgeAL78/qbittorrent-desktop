@@ -41,6 +41,7 @@ const DEFAULT_CONFIG = {
   registerMagnetHandler: true,
   allowUntrustedCerts: true,
   autoAddMagnets: false,
+  autoAddTorrents: false,
   notificationsEnabled: true,
   completionNotifications: true,
   addedNotifications: true,
@@ -227,7 +228,9 @@ async function addTorrentFileViaApi(filePath) {
 let mainWindow = null;
 let settingsWindow = null;
 let magnetPopupWindow = null;
-let pendingMagnetUrl = null;
+// What the add-confirmation popup is currently offering:
+// { kind: 'magnet' | 'torrent', value: <magnet URL | file path>, name }
+let pendingAdd = null;
 let tray = null;
 let clipboardInterval = null;
 let lastClipboardText = '';
@@ -436,10 +439,15 @@ async function handleFileArg(filePath) {
   if (!filePath) return;
   filePath = filePath.trim().replace(/^"|"$/g, ''); // strip quotes Windows sometimes adds
   if (filePath.toLowerCase().endsWith('.torrent') && fs.existsSync(filePath)) {
-    const ok = await addTorrentFileViaApi(filePath);
-    showTrayNotification(ok ? `Added: ${path.basename(filePath)}` : `Failed to add: ${path.basename(filePath)}`, undefined, 'addedNotifications');
-    if (ok && mainWindow && mainWindow.isVisible()) mainWindow.webContents.reload();
+    if (config.autoAddTorrents) await addTorrentFile(filePath);
+    else showAddPopup({ kind: 'torrent', value: filePath, name: path.basename(filePath) });
   }
+}
+
+async function addTorrentFile(filePath) {
+  const ok = await addTorrentFileViaApi(filePath);
+  showTrayNotification(ok ? `Added: ${path.basename(filePath)}` : `Failed to add: ${path.basename(filePath)}`, undefined, 'addedNotifications');
+  if (ok && mainWindow && mainWindow.isVisible()) mainWindow.webContents.reload();
 }
 
 async function handleMagnetArg(magnetUrl) {
@@ -462,7 +470,7 @@ async function handleDetectedMagnet(magnetUrl) {
       });
     }
   } else {
-    showMagnetPopup(magnetUrl);
+    showAddPopup({ kind: 'magnet', value: magnetUrl, name: getMagnetName(magnetUrl) });
   }
 }
 
@@ -472,13 +480,13 @@ function parseCommandLine(argv) {
   return { magnet, torrent };
 }
 
-// ── Magnet popup window ──────────────────────────────────────────────────────
-function showMagnetPopup(magnetUrl) {
-  pendingMagnetUrl = magnetUrl;
+// ── Add-confirmation popup (magnets and .torrent files) ─────────────────────
+function showAddPopup(item) {
+  pendingAdd = item;
 
   if (magnetPopupWindow && !magnetPopupWindow.isDestroyed()) {
     // Update existing popup instead of stacking new ones
-    magnetPopupWindow.webContents.send('update-magnet', magnetUrl, getMagnetName(magnetUrl));
+    magnetPopupWindow.webContents.send('popup-update', item.kind, item.name);
     return;
   }
 
@@ -768,26 +776,30 @@ ipcMain.handle('open-content-path', async (event, remotePath) => {
 });
 
 // Popup IPC
-ipcMain.handle('popup-get-magnet', () => ({
-  url: pendingMagnetUrl,
-  name: pendingMagnetUrl ? getMagnetName(pendingMagnetUrl) : '',
+ipcMain.handle('popup-get-item', () => ({
+  kind: pendingAdd ? pendingAdd.kind : 'magnet',
+  name: pendingAdd ? pendingAdd.name : '',
   timeout: Number(config.magnetPopupTimeout) > 0 ? Number(config.magnetPopupTimeout) : 12,
 }));
 
-ipcMain.handle('popup-open-dialog', async () => {
-  const url = pendingMagnetUrl;
-  if (!url) return;
+ipcMain.handle('popup-add', async () => {
+  const item = pendingAdd;
+  if (!item) return;
   if (magnetPopupWindow && !magnetPopupWindow.isDestroyed()) magnetPopupWindow.close();
+  if (item.kind === 'torrent') {
+    await addTorrentFile(item.value);
+    return;
+  }
   // Keep lastClipboardText as the URL so it won't re-trigger while the link
   // is still in the clipboard, but will fire again if copied a second time.
-  lastClipboardText = url;
-  const ok = await addMagnetViaApi(url);
+  lastClipboardText = item.value;
+  const ok = await addMagnetViaApi(item.value);
   if (ok && mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.reload();
 });
 
 ipcMain.handle('popup-dismiss', () => {
   if (magnetPopupWindow && !magnetPopupWindow.isDestroyed()) magnetPopupWindow.close();
-  lastClipboardText = pendingMagnetUrl || lastClipboardText;
+  if (pendingAdd && pendingAdd.kind === 'magnet') lastClipboardText = pendingAdd.value;
 });
 
 // ── Magnet protocol handler ──────────────────────────────────────────────────

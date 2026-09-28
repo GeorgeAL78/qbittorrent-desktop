@@ -311,6 +311,13 @@
         </label>
       </div>
       <div class="toggle-row" style="margin-top:12px">
+        <span class="toggle-label">Add .torrent files immediately (skip the confirm popup)</span>
+        <label class="toggle">
+          <input type="checkbox" id="autoAddTorrents" />
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row" style="margin-top:12px">
         <span class="toggle-label">Automatically check for updates</span>
         <label class="toggle">
           <input type="checkbox" id="autoUpdate" />
@@ -415,6 +422,7 @@
       document.getElementById('clipboardMonitor').checked = cfg.clipboardMonitor !== false;
       document.getElementById('registerMagnetHandler').checked = cfg.registerMagnetHandler !== false;
       document.getElementById('autoAddMagnets').checked = !!cfg.autoAddMagnets;
+      document.getElementById('autoAddTorrents').checked = !!cfg.autoAddTorrents;
       document.getElementById('notificationsEnabled').checked = cfg.notificationsEnabled !== false;
       document.getElementById('completionNotifications').checked = cfg.completionNotifications !== false;
       document.getElementById('addedNotifications').checked = cfg.addedNotifications !== false;
@@ -466,6 +474,7 @@
         clipboardMonitor: document.getElementById('clipboardMonitor').checked,
         registerMagnetHandler: document.getElementById('registerMagnetHandler').checked,
         autoAddMagnets: document.getElementById('autoAddMagnets').checked,
+        autoAddTorrents: document.getElementById('autoAddTorrents').checked,
         notificationsEnabled: document.getElementById('notificationsEnabled').checked,
         completionNotifications: document.getElementById('completionNotifications').checked,
         addedNotifications: document.getElementById('addedNotifications').checked,
