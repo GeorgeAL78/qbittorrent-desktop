@@ -98,6 +98,11 @@ function qbtGet(apiPath) {
       (res) => {
         const sc = res.headers['set-cookie'];
         if (sc) qbtCookie = sc.map(c => c.split(';')[0]).join('; ');
+        // Only trust successful responses: a server that is mid-restart must not
+        // clear the version, but a 200 without the header means it's gone.
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          setDockerVersion(res.headers['x-docker-version'] || null);
+        }
         let data = '';
         res.on('data', d => (data += d));
         res.on('end', () => resolve({ status: res.statusCode, body: data.trim() }));
@@ -696,17 +701,19 @@ ipcMain.handle('reload', () => loadQbittorrent());
 ipcMain.handle('check-for-updates', () => checkForUpdatesManual());
 ipcMain.handle('open-in-browser', () => { if (config.qbUrl) shell.openExternal(config.qbUrl); });
 
-// The preload reads the X-Docker-Version response header (if the server sets it)
-// and reports it here; append it to the window title.
-ipcMain.on('docker-version', (event, version) => {
-  const v = (version || '').toString().trim();
-  if (!v || v === dockerVersion) return;
+// pia-qbittorrent-docker sets an "X-Docker-Version" header on every Web UI
+// response. qbtGet() reports it from each successful call, and the completion
+// poller calls it every 30s — so a container updated in place shows its new
+// version without restarting the app. null (header absent) strips the suffix.
+function setDockerVersion(version) {
+  const v = (version || '').toString().trim() || null;
+  if (v === dockerVersion) return;
   dockerVersion = v;
   if (mainWindow && !mainWindow.isDestroyed()) {
     const base = mainWindow.getTitle().split('  —  Docker ')[0];
-    mainWindow.setTitle(`${base}  —  Docker ${dockerVersion}`);
+    mainWindow.setTitle(v ? `${base}  —  Docker ${v}` : base);
   }
-});
+}
 
 function mapRemoteToLocal(remotePath) {
   const mappings = Array.isArray(config.pathMappings) ? config.pathMappings : [];

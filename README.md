@@ -158,7 +158,10 @@ npm run build
 
 ## Changelog
 
-### v1.0.41 *(latest)*
+### v1.0.42 *(latest)*
+- The title bar now picks up a **new Docker container version live** — within ~30s of the container coming back, no app restart needed. It also drops the Docker suffix if you point the app at a non-Docker qBittorrent.
+
+### v1.0.41
 - Updated to **Electron 44.1.1** (Chromium 152, Node 24.19) — a major bump from 43; no CI change needed since the Node requirement is unchanged. Cleared 2 advisories (`@xmldom/xmldom`, `fast-uri`) that came in with it; audit clean.
 
 ### v1.0.40
