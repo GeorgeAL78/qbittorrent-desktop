@@ -53,7 +53,7 @@ A Windows 11 desktop client for qBittorrent running on a remote machine or Docke
 - **Completion notifications** — desktop popup when a torrent finishes downloading
 - **Double-click to open** — double-click a torrent in the transfer list to open its download folder, or double-click a file/folder in the Content tab to open it directly
 - **Path mapping** — maps remote server paths to local mounted paths (e.g. `/downloads` → `Z:\qbittorrent`)
-- **.torrent file association** — open .torrent files directly with the app
+- **.torrent file association** — open .torrent files with the app, with the same add-confirmation popup as magnets (or skip it)
 
 ## Components
 
@@ -102,7 +102,7 @@ qBittorrent refers to files using **its own** paths (e.g. `/downloads` inside a 
 When a torrent finishes downloading, you get a native Windows notification; clicking it brings the app to the front.
 
 ### .torrent file association
-The app registers as a handler for `.torrent` files, so double-clicking a downloaded `.torrent` adds it straight to qBittorrent (you can also use **Add .torrent File…** from the tray).
+The app registers as a handler for `.torrent` files. Double-clicking a downloaded `.torrent` shows the same corner popup as a magnet link, with the file name and **Add to qBittorrent** / **Dismiss**; turn on *Add .torrent files immediately* to skip it and add straight away. (**Add .torrent File…** in the tray adds whatever you pick, no popup — choosing the file already is the confirmation.)
 
 ## Requirements
 
@@ -142,6 +142,7 @@ npm run build
 | Clipboard monitor | Watch clipboard for magnet links |
 | Register as default magnet link handler | Register the app as the OS handler for `magnet:` links |
 | Add magnets immediately | Add to qBittorrent directly, skipping the confirm popup |
+| Add .torrent files immediately | Same, for opened `.torrent` files |
 | Automatically check for updates | Toggle background checking (on launch + every 6h); downloading/installing always asks first regardless |
 | Path mappings | One or more remote→local pairs (e.g. `/downloads` → `Z:\qbittorrent`); the most specific match wins |
 
@@ -158,7 +159,10 @@ npm run build
 
 ## Changelog
 
-### v1.0.42 *(latest)*
+### v1.0.43 *(latest)*
+- Opening a **.torrent file** now shows the same add-confirmation popup as magnet links, instead of adding it instantly. New **Add .torrent files immediately** toggle (Settings → Behaviour) restores the old instant add.
+
+### v1.0.42
 - The title bar now picks up a **new Docker container version live** — within ~30s of the container coming back, no app restart needed. It also drops the Docker suffix if you point the app at a non-Docker qBittorrent.
 
 ### v1.0.41

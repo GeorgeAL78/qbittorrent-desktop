@@ -1,8 +1,8 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('popupApi', {
-  getMagnet: () => ipcRenderer.invoke('popup-get-magnet'),
-  openDialog: () => ipcRenderer.invoke('popup-open-dialog'),
+  getItem: () => ipcRenderer.invoke('popup-get-item'),
+  add: () => ipcRenderer.invoke('popup-add'),
   dismiss: () => ipcRenderer.invoke('popup-dismiss'),
-  onUpdate: (cb) => ipcRenderer.on('update-magnet', (e, url, name) => cb(url, name)),
+  onUpdate: (cb) => ipcRenderer.on('popup-update', (e, kind, name) => cb(kind, name)),
 });

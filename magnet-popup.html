@@ -124,7 +124,7 @@
 <body>
   <div class="header">
     <div class="dot"></div>
-    <span class="title">Magnet Detected</span>
+    <span class="title" id="title">Magnet Detected</span>
     <span class="timer" id="timer">12s</span>
   </div>
   <div class="name" id="name">Loading…</div>
@@ -141,9 +141,15 @@
     const timerEl = document.getElementById('timer');
     const progressEl = document.querySelector('.progress-bar');
 
-    async function init() {
-      const { name, timeout } = await api.getMagnet();
+    const TITLES = { magnet: 'Magnet Detected', torrent: 'Torrent File' };
+    function show(kind, name) {
+      document.getElementById('title').textContent = TITLES[kind] || TITLES.magnet;
       document.getElementById('name').textContent = name || 'Unknown Torrent';
+    }
+
+    async function init() {
+      const { kind, name, timeout } = await api.getItem();
+      show(kind, name);
       total = (timeout > 0) ? timeout : 12;
       seconds = total;
       timerEl.textContent = total + 's';
@@ -157,18 +163,18 @@
       if (seconds <= 0) clearInterval(tick);
     }, 1000);
 
-    // Update if a second magnet is detected while popup is open
-    api.onUpdate((url, name) => {
-      document.getElementById('name').textContent = name || 'Unknown Torrent';
+    // Update if another magnet / .torrent arrives while the popup is open
+    api.onUpdate((kind, name) => {
+      show(kind, name);
       // Restart countdown
       seconds = total;
       timerEl.textContent = total + 's';
     });
 
     document.getElementById('btnAdd').addEventListener('click', () => {
-      document.getElementById('btnAdd').textContent = 'Opening…';
+      document.getElementById('btnAdd').textContent = 'Adding…';
       document.getElementById('btnAdd').disabled = true;
-      api.openDialog();
+      api.add();
     });
 
     document.getElementById('btnDismiss').addEventListener('click', () => api.dismiss());
