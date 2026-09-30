@@ -120,7 +120,7 @@ You don't have to take the app on trust — every release can be checked indepen
   ```powershell
   Get-FileHash .\qBittorrent-Desktop-Setup-X.Y.Z.exe -Algorithm SHA256
   ```
-- **Code signing — in progress.** The installer is not yet Authenticode-signed, so Windows SmartScreen may show *"Windows protected your PC"* (click **More info → Run anyway**). Signing through [SignPath](https://signpath.org/)'s free open-source programme is being set up; until then, the provenance check above is the strongest proof of where the file came from.
+- **Not code-signed.** The installer has no Authenticode signature, so Windows SmartScreen may show *"Windows protected your PC"* (click **More info → Run anyway**). The provenance check above is the proof of where the file came from.
 
 ## Requirements
 
