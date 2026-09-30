@@ -13,8 +13,10 @@ jobs:
   release:
     runs-on: windows-latest
     permissions:
-      contents: write   # create the GitHub Release + upload assets
-      packages: write   # publish to GitHub Packages
+      contents: write      # create the GitHub Release + upload assets
+      packages: write      # publish to GitHub Packages
+      id-token: write      # sign the build-provenance attestation (Sigstore OIDC)
+      attestations: write  # store the attestation on the repo
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -74,6 +76,49 @@ jobs:
               gh api -X PATCH "repos/$repo/releases/assets/$($a.id)" -f label="$($a.name) (Portable)"
             }
           }
+
+      - name: Attest build provenance
+        # Signed statement that these exact exes were built by this workflow,
+        # from this repo, at this commit. Users check it with:
+        #   gh attestation verify <file>.exe --repo GeorgeAL78/qbittorrent-desktop
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: dist/qBittorrent-Desktop-*.exe
+
+      - name: Publish SHA-256 checksums
+        # Hash the exes CI built, refuse to publish if the release copies differ
+        # (GitHub reports each asset's sha256 digest), then attach
+        # SHA256SUMS.txt and put the same table in the release notes.
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $repo = "${{ github.repository }}"
+          $tag  = "${{ github.ref_name }}"
+          $files = Get-ChildItem dist -Filter 'qBittorrent-Desktop-*.exe' | Sort-Object Name
+          if ($files.Count -ne 2) { throw "Expected 2 exes in dist, found $($files.Count)" }
+          $assets = gh api "repos/$repo/releases/tags/$tag" --jq '.assets' | ConvertFrom-Json
+          $lines = foreach ($f in $files) {
+            $hash = (Get-FileHash $f.FullName -Algorithm SHA256).Hash.ToLower()
+            $asset = $assets | Where-Object { $_.name -eq $f.Name }
+            if (-not $asset) { throw "$($f.Name) is not on the release" }
+            if ($asset.digest -ne "sha256:$hash") { throw "$($f.Name): release copy $($asset.digest) != built sha256:$hash" }
+            "$hash  $($f.Name)"
+          }
+          $lines | Set-Content -Path SHA256SUMS.txt -Encoding ascii
+          gh release upload $tag SHA256SUMS.txt --clobber --repo $repo
+          $table = ($lines | ForEach-Object { $h, $n = $_ -split '  ', 2; "| ``$n`` | ``$h`` |" }) -join "`n"
+          $notes = @"
+          ### Verify your download
+          Built by [this workflow run](${{ github.server_url }}/$repo/actions/runs/${{ github.run_id }}) from tag ``$tag``. See the [README](${{ github.server_url }}/$repo#verify-your-download) for how to check these.
+
+          | File | SHA-256 |
+          |---|---|
+          $table
+
+          Build provenance: ``gh attestation verify <file>.exe --repo $repo``
+          "@
+          gh release edit $tag --repo $repo --notes $notes
 
       # Configure auth for GitHub Packages only now, so the scoped
       # registry can't interfere with the public-registry npm ci above.

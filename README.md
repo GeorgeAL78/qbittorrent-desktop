@@ -33,6 +33,7 @@
   <a href="https://github.com/GeorgeAL78/qbittorrent-desktop/releases/latest"><b>Download</b></a> •
   <a href="#setup">Setup</a> •
   <a href="#build">Build</a> •
+  <a href="#verify-your-download">Verify</a> •
   <a href="#components">Components</a> •
   <a href="#settings">Settings</a> •
   <a href="#changelog">Changelog</a> •
@@ -104,6 +105,23 @@ When a torrent finishes downloading, you get a native Windows notification; clic
 ### .torrent file association
 The app registers as a handler for `.torrent` files. Double-clicking a downloaded `.torrent` shows the same corner popup as a magnet link, with the file name and **Add to qBittorrent** / **Dismiss**; turn on *Add .torrent files immediately* to skip it and add straight away. (**Add .torrent File…** in the tray adds whatever you pick, no popup — choosing the file already is the confirmation.)
 
+## Verify your download
+
+You don't have to take the app on trust — every release can be checked independently.
+
+- **Open source.** All of the app's own code is in this repository (GPL-3.0); everything else in the install is the standard Electron runtime and electron-builder's installer/updater helpers.
+- **Built by CI, never by hand.** Every release is built by [this GitHub Actions workflow](.github/workflows/release.yml) from a tagged commit, and the release notes link the exact run. No one uploads installers manually.
+- **Build provenance.** Each `.exe` carries a signed [GitHub attestation](https://docs.github.com/actions/security-for-github-actions/using-artifact-attestations) proving it came out of that workflow, in this repo, at that commit. With the [GitHub CLI](https://cli.github.com/):
+  ```powershell
+  gh attestation verify .\qBittorrent-Desktop-Setup-X.Y.Z.exe --repo GeorgeAL78/qbittorrent-desktop
+  ```
+  A modified or re-uploaded file fails this check.
+- **SHA-256 checksums.** Every release has a `SHA256SUMS.txt` and the same table in its notes. The workflow refuses to publish if the uploaded file differs from what it built. To check your copy:
+  ```powershell
+  Get-FileHash .\qBittorrent-Desktop-Setup-X.Y.Z.exe -Algorithm SHA256
+  ```
+- **Code signing — in progress.** The installer is not yet Authenticode-signed, so Windows SmartScreen may show *"Windows protected your PC"* (click **More info → Run anyway**). Signing through [SignPath](https://signpath.org/)'s free open-source programme is being set up; until then, the provenance check above is the strongest proof of where the file came from.
+
 ## Requirements
 
 - qBittorrent running with Web UI enabled (local or remote/Docker)
@@ -159,7 +177,10 @@ npm run build
 
 ## Changelog
 
-### v1.0.44 *(latest)*
+### v1.0.45 *(latest)*
+- **Verifiable downloads.** Every release now carries a signed build-provenance attestation (proves it was built by this repo's CI) and a `SHA256SUMS.txt`, with the checksums in the release notes. See [Verify your download](#verify-your-download).
+
+### v1.0.44
 - Updated to **Electron 44.4.5** (from 44.1.1).
 
 ### v1.0.43

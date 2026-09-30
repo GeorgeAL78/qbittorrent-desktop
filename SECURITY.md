@@ -7,6 +7,10 @@
 | Latest release | ✅ |
 | Older releases | ❌ |
 
+## Verifying a download
+
+Every release carries a build-provenance attestation and SHA-256 checksums. See [Verify your download](README.md#verify-your-download).
+
 ## Reporting a Vulnerability
 
 Please **do not** open a public GitHub issue for security vulnerabilities.
