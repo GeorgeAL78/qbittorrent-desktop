@@ -100,7 +100,9 @@ jobs:
             if ($asset.digest -ne "sha256:$hash") { throw "${published}: release copy $($asset.digest) != built sha256:$hash" }
             "$hash  $published"
           }
-          $lines | Set-Content -Path SHA256SUMS.txt -Encoding ascii
+          # LF line endings: Set-Content would write CRLF on this Windows runner,
+          # and `sha256sum -c` (Linux/macOS) then can't find the files.
+          [IO.File]::WriteAllText("$PWD/SHA256SUMS.txt", (($lines -join "`n") + "`n"))
           gh release upload $tag SHA256SUMS.txt --clobber --repo $repo
           $table = ($lines | ForEach-Object { $h, $n = $_ -split '  ', 2; "| ``$n`` | ``$h`` |" }) -join "`n"
           $notes = @"
