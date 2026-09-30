@@ -177,7 +177,7 @@ npm run build
 
 ## Changelog
 
-### v1.0.45 *(latest)*
+### v1.0.46 *(latest)*
 - **Verifiable downloads.** Every release now carries a signed build-provenance attestation (proves it was built by this repo's CI) and a `SHA256SUMS.txt`, with the checksums in the release notes. See [Verify your download](#verify-your-download).
 
 ### v1.0.44

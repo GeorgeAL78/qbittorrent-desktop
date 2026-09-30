@@ -77,14 +77,6 @@ jobs:
             }
           }
 
-      - name: Attest build provenance
-        # Signed statement that these exact exes were built by this workflow,
-        # from this repo, at this commit. Users check it with:
-        #   gh attestation verify <file>.exe --repo GeorgeAL78/qbittorrent-desktop
-        uses: actions/attest-build-provenance@v4
-        with:
-          subject-path: dist/qBittorrent-Desktop-*.exe
-
       - name: Publish SHA-256 checksums
         # Hash the exes CI built, refuse to publish if the release copies differ
         # (GitHub reports each asset's sha256 digest), then attach
@@ -95,15 +87,18 @@ jobs:
         run: |
           $repo = "${{ github.repository }}"
           $tag  = "${{ github.ref_name }}"
-          $files = Get-ChildItem dist -Filter 'qBittorrent-Desktop-*.exe' | Sort-Object Name
-          if ($files.Count -ne 2) { throw "Expected 2 exes in dist, found $($files.Count)" }
+          # electron-builder writes "qBittorrent Desktop Setup X.exe" locally and
+          # uploads it as "qBittorrent-Desktop-Setup-X.exe"; users get the latter.
+          $files = @(Get-ChildItem dist -Filter '*.exe' | Sort-Object Name)
+          if ($files.Count -ne 2) { throw "Expected 2 exes in dist, found $($files.Count): $($files.Name -join ', ')" }
           $assets = gh api "repos/$repo/releases/tags/$tag" --jq '.assets' | ConvertFrom-Json
           $lines = foreach ($f in $files) {
+            $published = $f.Name -replace ' ', '-'
             $hash = (Get-FileHash $f.FullName -Algorithm SHA256).Hash.ToLower()
-            $asset = $assets | Where-Object { $_.name -eq $f.Name }
-            if (-not $asset) { throw "$($f.Name) is not on the release" }
-            if ($asset.digest -ne "sha256:$hash") { throw "$($f.Name): release copy $($asset.digest) != built sha256:$hash" }
-            "$hash  $($f.Name)"
+            $asset = $assets | Where-Object { $_.name -eq $published }
+            if (-not $asset) { throw "$published is not on the release" }
+            if ($asset.digest -ne "sha256:$hash") { throw "${published}: release copy $($asset.digest) != built sha256:$hash" }
+            "$hash  $published"
           }
           $lines | Set-Content -Path SHA256SUMS.txt -Encoding ascii
           gh release upload $tag SHA256SUMS.txt --clobber --repo $repo
@@ -119,6 +114,16 @@ jobs:
           Build provenance: ``gh attestation verify <file>.exe --repo $repo``
           "@
           gh release edit $tag --repo $repo --notes $notes
+
+      - name: Attest build provenance
+        # Signed statement that these exact exes were built by this workflow,
+        # from this repo, at this commit. Runs after the checksum step, which
+        # has already asserted dist holds exactly the two published exes.
+        # Users check it with:
+        #   gh attestation verify <file>.exe --repo GeorgeAL78/qbittorrent-desktop
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: dist/*.exe
 
       # Configure auth for GitHub Packages only now, so the scoped
       # registry can't interfere with the public-registry npm ci above.
