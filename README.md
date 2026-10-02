@@ -208,16 +208,16 @@ npm run build
 - Updated to **Electron 43.2.0** (Chromium 150.0.7871.129, Node 24.18.0) — electron-builder/electron-updater already at latest. Also cleared 3 transitive-dependency vulnerabilities (`brace-expansion`, `fast-uri`, `tar` — all build-tool-only, non-breaking `npm audit fix` bumps).
 
 ### v1.0.36
-- No functional changes — version-only bump to test the new 2-click update flow shipped in v1.0.35.
+- Maintenance release (no user-facing changes).
 
 ### v1.0.35
 - Update flow is now just **2 clicks**: "Check for Updates" → "Download && Install". Removed the second "restart now?" confirmation — once you approve the download, it installs and restarts automatically when ready.
 
 ### v1.0.34
-- No functional changes — version-only bump to trigger an update cycle on the already-logged v1.0.33, so the "restart to install does nothing the first time" issue can actually be captured in `update.log`.
+- Maintenance release (no user-facing changes).
 
 ### v1.0.33
-- Added diagnostic logging for the update flow (`update.log` in the app's userData folder) to track down reports of "Restart to Install" doing nothing on the first click but working on a second check. No behavior change — errors that were previously silently swallowed are now recorded instead.
+- Update activity (checks, downloads, installs and errors) is now written to `update.log` in the app's data folder. No behaviour change.
 
 ### v1.0.32
 - Auto-update now always asks before doing anything: a dialog confirms before **downloading** a new version, and another confirms before **restarting to install** it — no more silent background downloads or install-on-quit
@@ -230,7 +230,7 @@ npm run build
 - App now quits cleanly on Windows shutdown/restart/logoff (`session-end`) instead of waiting to be force-terminated
 
 ### v1.0.30
-- Updated to **Electron 43** (Chromium 150, Node 24) — latest release; smoke-tested. CI now builds on Node 22 (clears the engine-compatibility warnings). electron-builder/electron-updater already at latest.
+- Updated to **Electron 43** (Chromium 150, Node 24). CI now builds on Node 22 (clears the engine-compatibility warnings). electron-builder/electron-updater already at latest.
 
 ### v1.0.29
 - Added **Allow untrusted HTTPS certificates** setting (Connection tab, on by default) — accepts self-signed certs for both the embedded Web UI **and** the app's own API calls (magnet/torrent add, completion notifications), so HTTPS with a self-signed cert works end-to-end
