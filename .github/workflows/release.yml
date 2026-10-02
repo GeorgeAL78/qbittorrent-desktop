@@ -142,3 +142,44 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm publish
+
+      # Only the latest version is kept. Both steps below refuse to delete
+      # anything unless the new version is confirmed complete first.
+
+      - name: Remove older releases
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $repo = "${{ github.repository }}"
+          $tag  = "${{ github.ref_name }}"
+          $names = @(gh api "repos/$repo/releases/tags/$tag" --jq '.assets[].name')
+          foreach ($need in 'latest.yml', 'SHA256SUMS.txt') {
+            if ($names -notcontains $need) { throw "$tag is missing $need; not removing older releases" }
+          }
+          if (@($names | Where-Object { $_ -like '*.exe' }).Count -ne 2) { throw "$tag does not have both exes; not removing older releases" }
+          $old = @(gh release list --repo $repo --limit 200 --json tagName --jq '.[].tagName' | Where-Object { $_ -and $_ -ne $tag })
+          foreach ($t in $old) {
+            gh release delete $t --repo $repo --yes --cleanup-tag
+            Write-Host "Removed release $t"
+          }
+          if ($old.Count -eq 0) { Write-Host "No older releases." }
+
+      - name: Remove older package versions
+        # Best-effort, like the publish step above.
+        continue-on-error: true
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $owner = "${{ github.repository_owner }}"
+          $pkg   = node -p "require('./package.json').name.split('/').pop()"
+          $ver   = node -p "require('./package.json').version"
+          $all = gh api "users/$owner/packages/npm/$pkg/versions" --paginate --jq '.[] | {id, name}' | ForEach-Object { $_ | ConvertFrom-Json }
+          if (-not ($all | Where-Object { $_.name -eq $ver })) { throw "Package version $ver is not published; not removing older versions" }
+          $old = @($all | Where-Object { $_.name -ne $ver })
+          foreach ($v in $old) {
+            gh api -X DELETE "users/$owner/packages/npm/$pkg/versions/$($v.id)" | Out-Null
+            Write-Host "Removed package version $($v.name)"
+          }
+          if ($old.Count -eq 0) { Write-Host "No older package versions." }
