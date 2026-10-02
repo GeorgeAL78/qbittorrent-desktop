@@ -177,6 +177,8 @@ npm run build
 
 ## Changelog
 
+> Only the latest version is available on the [Releases page](https://github.com/GeorgeAL78/qbittorrent-desktop/releases/latest); older versions are removed when a new one is published. The changelog below covers every version.
+
 ### v1.0.46 *(latest)*
 - **Verifiable downloads.** Every release now carries a signed build-provenance attestation (proves it was built by this repo's CI) and a `SHA256SUMS.txt`, with the checksums in the release notes. See [Verify your download](#verify-your-download).
 
