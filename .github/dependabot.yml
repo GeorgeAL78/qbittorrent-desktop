@@ -5,6 +5,8 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    assignees:
+      - "GeorgeAL78"
     open-pull-requests-limit: 5
     groups:
       # Bundle minor/patch bumps into a single PR to cut noise.
@@ -18,3 +20,5 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    assignees:
+      - "GeorgeAL78"
