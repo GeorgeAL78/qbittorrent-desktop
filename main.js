@@ -47,6 +47,8 @@ const DEFAULT_CONFIG = {
   addedNotifications: true,
   updateNotifications: true,
   trayHintNotifications: true,
+  pausedByApp: [],
+  pauseIncludesSeeding: false,
   autoUpdate: true,
   dismissedUpdateVersion: '',
   magnetPopupTimeout: 12,
@@ -354,6 +356,10 @@ function updateTrayMenu() {
     { type: 'separator' },
     { label: 'Add Magnet from Clipboard', click: addMagnetFromClipboard },
     { label: 'Add .torrent File…', click: addTorrentFromDialog },
+    pausedByApp().length
+      ? { label: `Resume (${pausedByApp().length} paused)`, click: resumeDownloads }
+      : { label: config.pauseIncludesSeeding ? 'Pause All Torrents' : 'Pause All Downloads',
+          click: pauseDownloads, enabled: !!config.qbUrl },
     { type: 'separator' },
     { label: 'Settings', click: openSettings },
     // Portable builds can't self-update, so don't offer an action that can't work.
@@ -387,6 +393,67 @@ function showTrayNotification(body, onClick, category) {
   const n = new Notification({ title: 'qBittorrent Desktop', body, icon: getIconPath() || undefined, silent: true });
   n.on('click', onClick || showMainWindow);
   n.show();
+}
+
+// ── Pause / resume downloads (tray) ─────────────────────────────────────────
+// Stops the unfinished torrents that are currently running, and the seeding
+// ones too when pauseIncludesSeeding is on. Remembers exactly which ones it
+// stopped so Resume starts those and never a torrent the user had stopped.
+const STOPPED_STATES = new Set(['stoppedDL', 'stoppedUP', 'pausedDL', 'pausedUP']);
+
+function pausedByApp() {
+  return Array.isArray(config.pausedByApp) ? config.pausedByApp : [];
+}
+
+// qBittorrent 5.x names these stop/start; 4.x used pause/resume.
+async function qbtTorrentAction(action, hashes) {
+  const legacy = { stop: 'pause', start: 'resume' }[action];
+  const fields = { hashes: hashes.join('|') };
+  let res = await qbtApiCall(() => qbtPost(`/api/v2/torrents/${action}`, fields));
+  if (res && res.status === 404) res = await qbtApiCall(() => qbtPost(`/api/v2/torrents/${legacy}`, fields));
+  return !!res && res.status === 200;
+}
+
+function showPauseError(what) {
+  dialog.showMessageBox(mainWindow || undefined, {
+    type: 'error', title: `Could not ${what} downloads`,
+    message: `Could not ${what} downloads.\n\nMake sure qBittorrent is reachable and credentials are correct in Settings.`,
+  });
+}
+
+async function pauseDownloads() {
+  const res = await qbtApiCall(() => qbtGet('/api/v2/torrents/info'));
+  let torrents = null;
+  try { torrents = res && res.status === 200 ? JSON.parse(res.body) : null; } catch {}
+  if (!Array.isArray(torrents)) return showPauseError('pause');
+
+  const includeSeeding = config.pauseIncludesSeeding === true;
+  const hashes = torrents
+    .filter((t) => !STOPPED_STATES.has(t.state) && (includeSeeding || t.progress < 1))
+    .map((t) => t.hash);
+  if (!hashes.length) {
+    showTrayNotification(includeSeeding ? 'No running torrents to pause.' : 'No active downloads to pause.');
+    return;
+  }
+  if (!(await qbtTorrentAction('stop', hashes))) return showPauseError('pause');
+
+  config.pausedByApp = [...new Set([...pausedByApp(), ...hashes])];
+  saveConfig(config);
+  updateTrayMenu();
+  const noun = includeSeeding ? 'torrent' : 'download';
+  showTrayNotification(`Paused ${hashes.length} ${noun}${hashes.length === 1 ? '' : 's'}.`
+    + (includeSeeding ? '' : ' Finished torrents keep seeding.'));
+}
+
+async function resumeDownloads() {
+  const hashes = pausedByApp();
+  if (!hashes.length) return;
+  if (!(await qbtTorrentAction('start', hashes))) return showPauseError('resume');
+
+  config.pausedByApp = [];
+  saveConfig(config);
+  updateTrayMenu();
+  showTrayNotification(`Resumed ${hashes.length} torrent${hashes.length === 1 ? '' : 's'}.`);
 }
 
 // ── Magnet + torrent handling ────────────────────────────────────────────────
@@ -693,7 +760,9 @@ ipcMain.handle('get-config', () => config);
 ipcMain.handle('save-config', (event, newConfig) => {
   const urlChanged = newConfig.qbUrl !== config.qbUrl;
   const certChanged = newConfig.allowUntrustedCerts !== config.allowUntrustedCerts;
-  config = { ...config, ...newConfig };
+  // pausedByApp is owned by the tray actions; the Settings window holds a copy
+  // from when it opened, which must not overwrite a pause made since then.
+  config = { ...config, ...newConfig, pausedByApp: config.pausedByApp };
   saveConfig(config);
   app.setLoginItemSettings({
     openAtLogin: !!config.runAtStartup,

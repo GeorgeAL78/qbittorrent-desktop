@@ -318,6 +318,14 @@
         </label>
       </div>
       <div class="toggle-row" style="margin-top:12px">
+        <span class="toggle-label">Tray "Pause All" also stops seeding</span>
+        <label class="toggle">
+          <input type="checkbox" id="pauseIncludesSeeding" />
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="hint">Off: only unfinished torrents are paused; finished ones keep seeding.</div>
+      <div class="toggle-row" style="margin-top:12px">
         <span class="toggle-label">Automatically check for updates</span>
         <label class="toggle">
           <input type="checkbox" id="autoUpdate" />
@@ -423,6 +431,7 @@
       document.getElementById('registerMagnetHandler').checked = cfg.registerMagnetHandler !== false;
       document.getElementById('autoAddMagnets').checked = !!cfg.autoAddMagnets;
       document.getElementById('autoAddTorrents').checked = !!cfg.autoAddTorrents;
+      document.getElementById('pauseIncludesSeeding').checked = !!cfg.pauseIncludesSeeding;
       document.getElementById('notificationsEnabled').checked = cfg.notificationsEnabled !== false;
       document.getElementById('completionNotifications').checked = cfg.completionNotifications !== false;
       document.getElementById('addedNotifications').checked = cfg.addedNotifications !== false;
@@ -475,6 +484,7 @@
         registerMagnetHandler: document.getElementById('registerMagnetHandler').checked,
         autoAddMagnets: document.getElementById('autoAddMagnets').checked,
         autoAddTorrents: document.getElementById('autoAddTorrents').checked,
+        pauseIncludesSeeding: document.getElementById('pauseIncludesSeeding').checked,
         notificationsEnabled: document.getElementById('notificationsEnabled').checked,
         completionNotifications: document.getElementById('completionNotifications').checked,
         addedNotifications: document.getElementById('addedNotifications').checked,
