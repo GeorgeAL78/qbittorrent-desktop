@@ -51,10 +51,13 @@ A Windows 11 desktop client for qBittorrent running on a remote machine or Docke
 - **Clipboard monitor** — automatically detects magnet links copied to clipboard and offers to add them
 - **System tray** — minimize to tray, optionally start minimized, or launch automatically at Windows startup; pause and resume all downloads from the tray
 - **Automatic updates** — the installed app checks GitHub Releases on launch and periodically, and asks for permission before downloading or installing anything
-- **Completion notifications** — desktop popup when a torrent finishes downloading
+- **Notifications** — desktop popups when a torrent finishes or is added, each switchable in Settings
 - **Double-click to open** — double-click a torrent in the transfer list to open its download folder, or double-click a file/folder in the Content tab to open it directly
-- **Path mapping** — maps remote server paths to local mounted paths (e.g. `/downloads` → `Z:\qbittorrent`)
+- **Path mapping** — maps remote server paths to local mounted paths (e.g. `/downloads` → `Z:\qbittorrent`), so files open straight from your drive
 - **.torrent file association** — open .torrent files with the app, with the same add-confirmation popup as magnets (or skip it)
+- **Desktop menu** — adds Settings, Check for Updates and Open in Browser to qBittorrent's own menu bar
+- **Docker version in the title bar** — shows the running [pia-qbittorrent-docker](https://github.com/GeorgeAL78/pia-qbittorrent-docker) version, updated live
+- **Verifiable downloads** — every release is built by CI with signed build provenance and SHA-256 checksums
 
 ## Components
 
@@ -81,7 +84,7 @@ A Windows 11 desktop client for qBittorrent running on a remote machine or Docke
 qBittorrent Desktop loads your qBittorrent **Web UI** inside a native window (Electron/Chromium), so you get the full, familiar qBittorrent interface — every tab, column, and setting — without keeping a browser tab open. It communicates over qBittorrent's Web API, so it works with **any** reachable instance (local, remote server, NAS, or Docker). Everything below is added on top of that web interface.
 
 ### Magnet links from your browser
-When the handler is enabled, the app registers itself with Windows as the opener for `magnet:` links. Click a magnet on any site and a small confirmation popup appears in the corner showing the torrent's name, with **Add to qBittorrent** / **Dismiss** (it auto-dismisses after ~12 seconds). To make it the default opener, set it once in **Settings → Apps → Default apps → Choose defaults by link type → `MAGNET`**. See [Settings](#settings) to toggle the registration.
+When the handler is enabled, the app registers itself with Windows as the opener for `magnet:` links. Click a magnet on any site and a small confirmation popup appears in the corner showing the torrent's name, with **Add to qBittorrent** / **Dismiss**. It closes on its own after 12 seconds (adjustable in Settings → Notifications), or turn on *Add magnets immediately* to skip it. To make it the default opener, set it once in **Settings → Apps → Default apps → Choose defaults by link type → `MAGNET`**. See [Settings](#settings) to toggle the registration.
 
 ### Clipboard monitoring
 With *Monitor clipboard for magnet links* enabled, the app watches your clipboard and shows the same add-confirmation popup whenever you copy a magnet link — useful for sites that expose the magnet as plain text rather than a real `magnet:` anchor.
@@ -103,8 +106,8 @@ qBittorrent refers to files using **its own** paths (e.g. `/downloads` inside a 
 - **Double-click a file or folder** in the **Content** tab → opens that exact file in its default app, or that folder in Explorer.
 - **Download a finished file** from the Web UI (qBittorrent 5.3.0+) → if it is already on a mapped drive, the app offers to **open it**, **show it in its folder**, or download a copy anyway, instead of copying it over the network.
 
-### Completion notifications
-When a torrent finishes downloading, you get a native Windows notification; clicking it brings the app to the front.
+### Notifications
+When a torrent finishes downloading, you get a native Windows notification; clicking it brings the app to the front. Each notification type (finished, added, app update, "running in tray") can be switched off in Settings → Notifications, or all of them at once.
 
 ### .torrent file association
 The app registers as a handler for `.torrent` files. Double-clicking a downloaded `.torrent` shows the same corner popup as a magnet link, with the file name and **Add to qBittorrent** / **Dismiss**; turn on *Add .torrent files immediately* to skip it and add straight away. (**Add .torrent File…** in the tray adds whatever you pick, no popup — choosing the file already is the confirmation.)
@@ -130,7 +133,7 @@ You don't have to take the app on trust — every release can be checked indepen
 
 - qBittorrent running with Web UI enabled (local or remote/Docker)
 
-> **To build from source** (optional): [Node.js](https://nodejs.org/) v18+ is required. The pre-built `.exe` files in Releases are fully self-contained — no Node.js needed to run them.
+> **To build from source** (optional): [Node.js](https://nodejs.org/) 22.12 or newer is required. The pre-built `.exe` files in Releases are fully self-contained — no Node.js needed to run them.
 
 ## Setup
 
@@ -141,7 +144,7 @@ npm install
 npm start
 ```
 
-On first launch, a Settings window will open. Enter your qBittorrent Web UI URL (e.g. `http://192.168.1.169:8888`), credentials if required, and configure the path mapping.
+On first launch, a Settings window will open. Enter your qBittorrent Web UI URL (e.g. `http://192.168.1.100:8080`), credentials if required, and configure the path mapping.
 
 ## Build
 
@@ -153,23 +156,29 @@ npm run build
 
 ## Settings
 
+### Connection
+
 | Setting | Description |
 |---|---|
 | Web UI URL | Full URL to your qBittorrent Web UI including port |
 | Username / Password | Leave blank if authentication is disabled |
 | Allow untrusted HTTPS certificates | Accept self-signed certs (Web UI + API calls); on by default |
+
+### Behaviour
+
+| Setting | Description |
+|---|---|
 | Run at Windows startup | Launch the app automatically on login (minimized to tray) |
-| Start minimized | Launch directly to the system tray |
+| Start minimized to tray | Launch directly to the system tray |
 | Minimize to tray on close | Keep running in background when window is closed |
-| Clipboard monitor | Watch clipboard for magnet links |
-| Register as default magnet link handler | Register the app as the OS handler for `magnet:` links |
+| Monitor clipboard for magnet links | Watch the clipboard and offer to add copied magnet links |
+| Register as default magnet link handler | Register the app as the Windows handler for `magnet:` links |
 | Add magnets immediately | Add to qBittorrent directly, skipping the confirm popup |
 | Add .torrent files immediately | Same, for opened `.torrent` files |
 | Tray "Pause All" also stops seeding | Off by default: Pause All stops only unfinished torrents and finished ones keep seeding. On: seeding torrents are paused too |
-| Automatically check for updates | Toggle background checking (on launch + every 6h); downloading/installing always asks first regardless |
-| Path mappings | One or more remote→local pairs (e.g. `/downloads` → `Z:\qbittorrent`); the most specific match wins |
+| Automatically check for updates | Check in the background (on launch and every 6 hours); downloading and installing always asks first |
 
-### Notifications tab
+### Notifications
 
 | Setting | Description |
 |---|---|
@@ -177,8 +186,14 @@ npm run build
 | Download completed | Notify when a torrent finishes downloading |
 | Torrent / magnet added | Notify when a torrent or magnet link is added |
 | App update available / ready | Notify when an update is downloading or ready to install |
-| "Running in tray" hint on minimize | The one-time-per-minimize toast when the window is hidden to the tray |
+| "Running in tray" hint on minimize | The toast shown when the window is hidden to the tray |
 | Magnet popup auto-dismiss | How long (seconds) the confirm popup stays before closing |
+
+### Paths
+
+| Setting | Description |
+|---|---|
+| Path mappings | One or more remote→local pairs (e.g. `/downloads` → `Z:\qbittorrent`); the most specific match wins |
 
 ## Changelog
 
@@ -186,7 +201,7 @@ npm run build
 
 ### v1.0.49 *(latest)*
 - Downloading a finished file from the qBittorrent 5.3.0 Web UI now checks your path mappings first: if the file is already on this PC, you can open it or show it in its folder instead of copying it over the network.
-- Build tooling: electron-builder now downloads Electron with `@electron/get` 5, removing the deprecated `boolean` package and the `sprintf-js` alert.
+- Build tooling updated (`@electron/get` 5); the deprecated `boolean` package is no longer used.
 
 ### v1.0.48
 - **Pause All / Resume in the tray.** Pause All stops the downloads that are running, and Resume starts exactly those again; torrents you stopped yourself are left alone. Finished torrents keep seeding unless *Tray "Pause All" also stops seeding* is turned on in Settings → Behaviour.
@@ -209,21 +224,21 @@ npm run build
 - The title bar now picks up a **new Docker container version live** — within ~30s of the container coming back, no app restart needed. It also drops the Docker suffix if you point the app at a non-Docker qBittorrent.
 
 ### v1.0.41
-- Updated to **Electron 44.1.1** (Chromium 152, Node 24.19) — a major bump from 43; no CI change needed since the Node requirement is unchanged. Cleared 2 advisories (`@xmldom/xmldom`, `fast-uri`) that came in with it; audit clean.
+- Updated to **Electron 44.1.1** (Chromium 152, Node 24.19), with updated build dependencies.
 
 ### v1.0.40
 - New **app icon**, shared with [pia-qbittorrent-docker](https://github.com/GeorgeAL78/pia-qbittorrent-docker) so the two projects match. Applies to the window, tray, notifications, installer and `.torrent` file association.
 
 ### v1.0.39
-- Security: bumped `js-yaml` to the patched 4.3.1 (CVE-2026-59870, quadratic CPU consumption — the only advisory that reached shipped code, via electron-updater) and cleared 9 build-only `undici`/`fast-uri` advisories. Audit clean.
+- Security: `js-yaml` updated to 4.3.1 (CVE-2026-59870, quadratic CPU consumption; ships in the app via electron-updater), plus updated build dependencies.
 
 ### v1.0.38
 - **Portable build no longer offers updates it can't perform** — "Check for Updates" is hidden from the tray menu, and choosing it from the Desktop menu now explains the limitation and links to the Releases page instead of silently doing nothing
 - `update.log` is now capped (~64 KB) instead of growing indefinitely
-- Added a syntax-check step to CI so a parse error fails in seconds rather than after a full build
+- Release builds now run a syntax check first
 
 ### v1.0.37
-- Updated to **Electron 43.2.0** (Chromium 150.0.7871.129, Node 24.18.0) — electron-builder/electron-updater already at latest. Also cleared 3 transitive-dependency vulnerabilities (`brace-expansion`, `fast-uri`, `tar` — all build-tool-only, non-breaking `npm audit fix` bumps).
+- Updated to **Electron 43.2.0** (Chromium 150.0.7871.129, Node 24.18.0), with updated build dependencies.
 
 ### v1.0.36
 - Maintenance release (no user-facing changes).
@@ -248,13 +263,13 @@ npm run build
 - App now quits cleanly on Windows shutdown/restart/logoff (`session-end`) instead of waiting to be force-terminated
 
 ### v1.0.30
-- Updated to **Electron 43** (Chromium 150, Node 24). CI now builds on Node 22 (clears the engine-compatibility warnings). electron-builder/electron-updater already at latest.
+- Updated to **Electron 43** (Chromium 150, Node 24).
 
 ### v1.0.29
 - Added **Allow untrusted HTTPS certificates** setting (Connection tab, on by default) — accepts self-signed certs for both the embedded Web UI **and** the app's own API calls (magnet/torrent add, completion notifications), so HTTPS with a self-signed cert works end-to-end
 
 ### v1.0.28
-- Installer is now **one-click** for reliable auto-updates — "Restart to Install Update" works first try (one UAC prompt → installs → relaunches). Removes the choose-install-folder and license-agreement pages (the project is still GPL-3.0 — see [LICENSE](LICENSE))
+- Installer is now **one-click** (one UAC prompt, then it installs and relaunches). The choose-install-folder and license-agreement pages are removed; the project is still GPL-3.0 — see [LICENSE](LICENSE)
 - **Settings window is now resizable** and remembers its size
 
 ### v1.0.27
@@ -279,7 +294,7 @@ npm run build
 - Updated Electron to 42.5.0 (Chromium 148, Node 24) — latest security/patch release
 
 ### v1.0.21
-- Auto-updates now install silently — the installer/license page no longer interrupts the update (it still shows on a normal first install). Fixes the clunky update flow introduced when the license page was added in v1.0.16.
+- Auto-updates now install silently; the license page only shows on a normal first install
 
 ### v1.0.20
 - Content tab: double-click a file to open it with its default app, or double-click a folder to open it in Explorer
@@ -309,7 +324,7 @@ npm run build
 - Fixed magnet links not opening from Chromium browsers (Edge/Chrome). The installer now registers the app's **Capabilities** so it appears in Windows *Default apps → Choose defaults by link type → magnet*. Set it there once and browsers will route magnet links to the app. (Installer is now per-machine so it can write the system-wide association.)
 
 ### v1.0.11
-- Added `magnet:` protocol registration to the NSIS installer (necessary but not sufficient on its own — see v1.0.12)
+- Added `magnet:` protocol registration to the NSIS installer
 
 ### v1.0.10
 - Added option to register/unregister the app as the default magnet link handler (Settings → Behaviour)
@@ -318,7 +333,7 @@ npm run build
 - Clicking a magnet link now shows the popup instead of silently adding
 
 ### v1.0.8
-- Added screenshots to README (main window, settings, tray menu)
+- Added screenshots to the README
 
 ### v1.0.5
 - Version number now shown in tray right-click menu
@@ -330,7 +345,7 @@ npm run build
 - "Start minimized" is now greyed out when "Run at Windows startup" is enabled
 
 ### v1.0.3
-- Removed hardcoded personal IP from default config
+- The default configuration no longer includes a server address
 
 ### v1.0.2
 - Added **Run at Windows startup** option — launches minimized to tray on login
