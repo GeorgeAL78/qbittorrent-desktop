@@ -297,6 +297,8 @@ function createMainWindow() {
     });
   });
 
+  watchFileDownloads(mainWindow.webContents.session);
+
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (url.startsWith('http') && !url.startsWith(config.qbUrl)) {
       shell.openExternal(url);
@@ -790,6 +792,75 @@ function setDockerVersion(version) {
     const base = mainWindow.getTitle().split('  —  Docker ')[0];
     mainWindow.setTitle(v ? `${base}  —  Docker ${v}` : base);
   }
+}
+
+// ── Downloads of completed files (qBittorrent 5.3.0+ Web UI) ───────────────
+// The Web UI can download a finished file through torrents/downloadFile. When
+// path mapping shows that file is already on this PC, offer to open it there
+// instead of copying it over the network. Otherwise the download goes ahead.
+const bypassDownloads = new Set();
+
+async function localCopyOfTorrentFile(hash, fileId) {
+  const [infoRes, filesRes] = await Promise.all([
+    qbtApiCall(() => qbtGet(`/api/v2/torrents/info?hashes=${encodeURIComponent(hash)}`)),
+    qbtApiCall(() => qbtGet(`/api/v2/torrents/files?hash=${encodeURIComponent(hash)}`)),
+  ]);
+  if (!infoRes || infoRes.status !== 200 || !filesRes || filesRes.status !== 200) return null;
+  const torrent = JSON.parse(infoRes.body)[0];
+  const files = JSON.parse(filesRes.body);
+  if (!torrent || !Array.isArray(files)) return null;
+  // `file` is the file index; the server also accepts the file's path.
+  const file = files.find((f) => String(f.index) === String(fileId)) || files.find((f) => f.name === fileId);
+  if (!file) return null;
+  // Same location the server streams from: the incomplete-downloads folder
+  // while the torrent is unfinished (if one is used), otherwise the save path.
+  const base = (torrent.progress < 1 && torrent.download_path) ? torrent.download_path : torrent.save_path;
+  const remote = `${String(base).replace(/[/\\]+$/, '')}/${file.name}`;
+  const local = mapRemoteToLocal(remote);
+  if (local === remote) return null; // no path mapping covers it
+  return fs.existsSync(local) ? local : null;
+}
+
+async function handleFileDownload(url, hash, fileId) {
+  let local = null;
+  try { local = await localCopyOfTorrentFile(hash, fileId); } catch {}
+  const download = () => {
+    if (!mainWindow || mainWindow.isDestroyed()) return;
+    bypassDownloads.add(url);
+    mainWindow.webContents.downloadURL(url);
+  };
+  if (!local) return download();
+
+  const { response } = await dialog.showMessageBox(mainWindow || undefined, {
+    type: 'question',
+    title: 'File already on this PC',
+    message: 'This file is already on this PC.',
+    detail: local,
+    buttons: ['Open', 'Show in Folder', 'Download Anyway', 'Cancel'],
+    defaultId: 0,
+    cancelId: 3,
+  });
+  if (response === 0) shell.openPath(local);
+  else if (response === 1) shell.showItemInFolder(local);
+  else if (response === 2) download();
+}
+
+const watchedSessions = new WeakSet();
+function watchFileDownloads(session) {
+  if (watchedSessions.has(session)) return;
+  watchedSessions.add(session);
+  session.on('will-download', (event, item) => {
+    const url = item.getURL();
+    if (bypassDownloads.delete(url)) return; // re-issued by handleFileDownload
+    let u;
+    try { u = new URL(url); } catch { return; }
+    if (!u.pathname.endsWith('/api/v2/torrents/downloadFile')) return;
+    const hash = u.searchParams.get('hash');
+    const fileId = u.searchParams.get('file');
+    if (!hash || fileId === null) return;
+    event.preventDefault();
+    handleFileDownload(url, hash, fileId);
+  });
 }
 
 function mapRemoteToLocal(remotePath) {

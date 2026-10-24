@@ -101,6 +101,7 @@ The **portable build can't self-update** — it's a single self-contained exe wi
 qBittorrent refers to files using **its own** paths (e.g. `/downloads` inside a Docker container), which don't exist as-is on your Windows PC. **Path mapping** bridges that: you tell the app the remote base path and where it's mounted locally (e.g. `/downloads` → `Z:\qbittorrent`). Once set:
 - **Double-click a torrent** in the transfer list → opens its download folder in Explorer.
 - **Double-click a file or folder** in the **Content** tab → opens that exact file in its default app, or that folder in Explorer.
+- **Download a finished file** from the Web UI (qBittorrent 5.3.0+) → if it is already on a mapped drive, the app offers to **open it**, **show it in its folder**, or download a copy anyway, instead of copying it over the network.
 
 ### Completion notifications
 When a torrent finishes downloading, you get a native Windows notification; clicking it brings the app to the front.
@@ -183,7 +184,11 @@ npm run build
 
 > Only the latest version is available on the [Releases page](https://github.com/GeorgeAL78/qbittorrent-desktop/releases/latest); older versions are removed when a new one is published. The changelog below covers every version.
 
-### v1.0.48 *(latest)*
+### v1.0.49 *(latest)*
+- Downloading a finished file from the qBittorrent 5.3.0 Web UI now checks your path mappings first: if the file is already on this PC, you can open it or show it in its folder instead of copying it over the network.
+- Build tooling: electron-builder now downloads Electron with `@electron/get` 5, removing the deprecated `boolean` package and the `sprintf-js` alert.
+
+### v1.0.48
 - **Pause All / Resume in the tray.** Pause All stops the downloads that are running, and Resume starts exactly those again; torrents you stopped yourself are left alone. Finished torrents keep seeding unless *Tray "Pause All" also stops seeding* is turned on in Settings → Behaviour.
 - Updated to **Electron 44.9.3**, electron-builder 26.18.0 and electron-updater 6.8.11. Electron 44.9.1+ includes a fix for compromised eMudhra intermediate certificates.
 
