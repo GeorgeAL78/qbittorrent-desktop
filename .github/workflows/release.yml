@@ -106,6 +106,10 @@ jobs:
           gh release upload $tag SHA256SUMS.txt --clobber --repo $repo
           $table = ($lines | ForEach-Object { $h, $n = $_ -split '  ', 2; "| ``$n`` | ``$h`` |" }) -join "`n"
           $notes = @"
+          | Main window | Settings | Tray menu |
+          |---|---|---|
+          | ![Main window](https://raw.githubusercontent.com/$repo/$tag/assets/screenshots/main-window.png) | ![Settings](https://raw.githubusercontent.com/$repo/$tag/assets/screenshots/settings.png) | ![Tray menu](https://raw.githubusercontent.com/$repo/$tag/assets/screenshots/tray-menu.png) |
+
           ### Verify your download
           Built by [this workflow run](${{ github.server_url }}/$repo/actions/runs/${{ github.run_id }}) from tag ``$tag``. See the [README](${{ github.server_url }}/$repo#verify-your-download) for how to check these.
 
