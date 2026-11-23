@@ -10,6 +10,10 @@ const https = require('https');
 
 app.setAppUserModelId('qBittorrent Desktop');
 
+// Hidden windows (the preloaded add popup) otherwise get the lowest process
+// priority, and under heavy CPU load they can take tens of seconds to respond.
+app.commandLine.appendSwitch('disable-renderer-backgrounding');
+
 // Accept self-signed / untrusted HTTPS certificates when the user allows it
 // (common for self-hosted / Docker qBittorrent behind HTTPS). Gated on config
 // so it can be turned off for strict validation. Governs the embedded Web UI;
@@ -550,21 +554,18 @@ function parseCommandLine(argv) {
 }
 
 // ── Add-confirmation popup (magnets and .torrent files) ─────────────────────
-function showAddPopup(item) {
-  pendingAdd = item;
+// The popup window is created once, hidden, and kept loaded, so showing it is
+// instant even when the CPU is busy (starting a new window can take seconds).
+// The auto-dismiss timer only starts once the popup is actually on screen.
+let popupLoaded = false;
+let popupTimer = null;
+let popupShowQueued = false;
 
-  if (magnetPopupWindow && !magnetPopupWindow.isDestroyed()) {
-    // Update existing popup instead of stacking new ones
-    magnetPopupWindow.webContents.send('popup-update', item.kind, item.name);
-    return;
-  }
-
-  const { workAreaSize } = screen.getPrimaryDisplay();
-  const W = 420, H = 172;
+function createAddPopupWindow() {
+  if (magnetPopupWindow && !magnetPopupWindow.isDestroyed()) return magnetPopupWindow;
+  popupLoaded = false;
   magnetPopupWindow = new BrowserWindow({
-    width: W, height: H,
-    x: workAreaSize.width - W - 16,
-    y: workAreaSize.height - H - 16,
+    width: 420, height: 172,
     alwaysOnTop: true,
     frame: false,
     resizable: false,
@@ -575,20 +576,54 @@ function showAddPopup(item) {
       preload: path.join(__dirname, 'preload-popup.js'),
       contextIsolation: true,
       nodeIntegration: false,
+      backgroundThrottling: false,
     },
     show: false,
     roundedCorners: true,
   });
-
   magnetPopupWindow.loadFile(path.join(__dirname, 'magnet-popup.html'));
-  magnetPopupWindow.once('ready-to-show', () => magnetPopupWindow.show());
-  magnetPopupWindow.on('closed', () => { magnetPopupWindow = null; });
+  magnetPopupWindow.webContents.once('did-finish-load', () => {
+    popupLoaded = true;
+    if (popupShowQueued) presentAddPopup();
+  });
+  // Keep the window for next time: hide instead of close, except when quitting.
+  magnetPopupWindow.on('close', (e) => {
+    if (!isQuitting) { e.preventDefault(); hideAddPopup(); }
+  });
+  magnetPopupWindow.on('closed', () => {
+    clearTimeout(popupTimer);
+    magnetPopupWindow = null;
+    popupLoaded = false;
+  });
+  return magnetPopupWindow;
+}
 
+function hideAddPopup() {
+  clearTimeout(popupTimer);
+  popupShowQueued = false;
+  if (magnetPopupWindow && !magnetPopupWindow.isDestroyed()) magnetPopupWindow.hide();
+}
+
+function presentAddPopup() {
+  popupShowQueued = false;
+  const win = magnetPopupWindow;
+  if (!win || win.isDestroyed() || !pendingAdd) return;
   const seconds = Number(config.magnetPopupTimeout) > 0 ? Number(config.magnetPopupTimeout) : 12;
-  const timer = setTimeout(() => {
-    if (magnetPopupWindow && !magnetPopupWindow.isDestroyed()) magnetPopupWindow.close();
-  }, seconds * 1000);
-  magnetPopupWindow.on('closed', () => clearTimeout(timer));
+  const { workArea } = screen.getPrimaryDisplay();
+  const [W, H] = win.getSize();
+  win.setPosition(workArea.x + workArea.width - W - 16, workArea.y + workArea.height - H - 16);
+  win.webContents.send('popup-show', pendingAdd.kind, pendingAdd.name, seconds);
+  win.show();
+  // (Re)start the countdown now that it is visible; a new item restarts it.
+  clearTimeout(popupTimer);
+  popupTimer = setTimeout(hideAddPopup, seconds * 1000);
+}
+
+function showAddPopup(item) {
+  pendingAdd = item;
+  createAddPopupWindow();
+  if (popupLoaded) presentAddPopup();
+  else popupShowQueued = true; // shown as soon as the page has loaded
 }
 
 // ── Completion notifications ─────────────────────────────────────────────────
@@ -916,16 +951,10 @@ ipcMain.handle('open-content-path', async (event, remotePath) => {
 });
 
 // Popup IPC
-ipcMain.handle('popup-get-item', () => ({
-  kind: pendingAdd ? pendingAdd.kind : 'magnet',
-  name: pendingAdd ? pendingAdd.name : '',
-  timeout: Number(config.magnetPopupTimeout) > 0 ? Number(config.magnetPopupTimeout) : 12,
-}));
-
 ipcMain.handle('popup-add', async () => {
   const item = pendingAdd;
   if (!item) return;
-  if (magnetPopupWindow && !magnetPopupWindow.isDestroyed()) magnetPopupWindow.close();
+  hideAddPopup();
   if (item.kind === 'torrent') {
     await addTorrentFile(item.value);
     return;
@@ -938,7 +967,7 @@ ipcMain.handle('popup-add', async () => {
 });
 
 ipcMain.handle('popup-dismiss', () => {
-  if (magnetPopupWindow && !magnetPopupWindow.isDestroyed()) magnetPopupWindow.close();
+  hideAddPopup();
   if (pendingAdd && pendingAdd.kind === 'magnet') lastClipboardText = pendingAdd.value;
 });
 
@@ -1121,6 +1150,7 @@ app.on('second-instance', async (event, commandLine) => {
 app.whenReady().then(async () => {
   createMainWindow();
   createTray();
+  createAddPopupWindow();
   startClipboardMonitor();
   startCompletionMonitor();
   setupAutoUpdater();

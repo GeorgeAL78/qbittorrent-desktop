@@ -136,50 +136,45 @@
 
   <script>
     const api = window.popupApi;
-    let total = 12;
-    let seconds = 12;
     const timerEl = document.getElementById('timer');
-    const progressEl = document.querySelector('.progress-bar');
-
+    const btnAdd = document.getElementById('btnAdd');
     const TITLES = { magnet: 'Magnet Detected', torrent: 'Torrent File' };
-    function show(kind, name) {
+    let seconds = 0;
+    let tick = null;
+
+    // Called each time the popup is shown (the page itself stays loaded).
+    api.onShow((kind, name, timeout) => {
       document.getElementById('title').textContent = TITLES[kind] || TITLES.magnet;
       document.getElementById('name').textContent = name || 'Unknown Torrent';
-    }
+      btnAdd.textContent = 'Add to qBittorrent';
+      btnAdd.disabled = false;
 
-    async function init() {
-      const { kind, name, timeout } = await api.getItem();
-      show(kind, name);
-      total = (timeout > 0) ? timeout : 12;
-      seconds = total;
-      timerEl.textContent = total + 's';
-      if (progressEl) progressEl.style.animationDuration = total + 's';
-    }
-
-    // Countdown timer
-    const tick = setInterval(() => {
-      seconds--;
+      seconds = (timeout > 0) ? timeout : 12;
       timerEl.textContent = seconds + 's';
-      if (seconds <= 0) clearInterval(tick);
-    }, 1000);
+      clearInterval(tick);
+      tick = setInterval(() => {
+        seconds--;
+        timerEl.textContent = Math.max(seconds, 0) + 's';
+        if (seconds <= 0) clearInterval(tick);
+      }, 1000);
 
-    // Update if another magnet / .torrent arrives while the popup is open
-    api.onUpdate((kind, name) => {
-      show(kind, name);
-      // Restart countdown
-      seconds = total;
-      timerEl.textContent = total + 's';
+      // Restart the shrinking progress bar.
+      const bar = document.querySelector('.progress-bar');
+      if (bar) {
+        bar.style.animation = 'none';
+        void bar.offsetWidth;
+        bar.style.animation = '';
+        bar.style.animationDuration = seconds + 's';
+      }
     });
 
-    document.getElementById('btnAdd').addEventListener('click', () => {
-      document.getElementById('btnAdd').textContent = 'Adding…';
-      document.getElementById('btnAdd').disabled = true;
+    btnAdd.addEventListener('click', () => {
+      btnAdd.textContent = 'Adding…';
+      btnAdd.disabled = true;
       api.add();
     });
 
     document.getElementById('btnDismiss').addEventListener('click', () => api.dismiss());
-
-    init();
   </script>
 </body>
 </html>
